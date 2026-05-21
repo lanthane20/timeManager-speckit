@@ -1,28 +1,28 @@
-# [PROJECT NAME] Development Guidelines
+# Guide de développement — [NOM DU PROJET]
 
-Auto-generated from all feature plans. Last updated: [DATE]
+Généré automatiquement à partir de tous les plans de fonctionnalités. Dernière mise à jour : [DATE]
 
-## Active Technologies
+## Technologies actives
 
-[EXTRACTED FROM ALL PLAN.MD FILES]
+[EXTRAIT DE TOUS LES FICHIERS PLAN.MD]
 
-## Project Structure
+## Structure du projet
 
 ```text
-[ACTUAL STRUCTURE FROM PLANS]
+[STRUCTURE RÉELLE ISSUE DES PLANS]
 ```
 
-## Commands
+## Commandes
 
-[ONLY COMMANDS FOR ACTIVE TECHNOLOGIES]
+[UNIQUEMENT LES COMMANDES POUR LES TECHNOLOGIES ACTIVES]
 
-## Code Style
+## Style de code
 
-[LANGUAGE-SPECIFIC, ONLY FOR LANGUAGES IN USE]
+[SPÉCIFIQUE AU LANGAGE, UNIQUEMENT POUR LES LANGAGES UTILISÉS]
 
-## Recent Changes
+## Modifications récentes
 
-[LAST 3 FEATURES AND WHAT THEY ADDED]
+[LES 3 DERNIÈRES FONCTIONNALITÉS ET CE QU'ELLES ONT APPORTÉ]
 
-<!-- MANUAL ADDITIONS START -->
-<!-- MANUAL ADDITIONS END -->
+<!-- AJOUTS MANUELS DÉBUT -->
+<!-- AJOUTS MANUELS FIN -->

@@ -1,128 +1,130 @@
-# Feature Specification: [FEATURE NAME]
+# Spécification de fonctionnalité : [NOM DE LA FONCTIONNALITÉ]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
-**Input**: User description: "$ARGUMENTS"
+**Branche** : `[###-nom-fonctionnalite]`
+**Créée** : [DATE]
+**Statut** : Brouillon
+**Entrée** : Description utilisateur : "$ARGUMENTS"
 
-## User Scenarios & Testing *(mandatory)*
+## Scénarios utilisateur & tests *(obligatoires)*
 
 <!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
+  IMPORTANT : Les user stories doivent être PRIORISÉES en tant que parcours utilisateur
+  ordonnés par importance. Chaque user story/parcours doit être TESTABLE DE FAÇON INDÉPENDANTE,
+  c'est-à-dire que si on n'implémente qu'UNE SEULE d'entre elles, on doit obtenir un MVP
+  (Produit Minimum Viable) qui apporte de la valeur.
+
+  Attribuer des priorités (P1, P2, P3, etc.) à chaque story, P1 étant la plus critique.
+  Chaque story est une tranche de fonctionnalité autonome pouvant être :
+  - Développée indépendamment
+  - Testée indépendamment
+  - Déployée indépendamment
+  - Démontrée aux utilisateurs indépendamment
 -->
 
-### User Story 1 - [Brief Title] (Priority: P1)
+### User Story 1 — [Titre court] (Priorité : P1)
 
-[Describe this user journey in plain language]
+[Décrire ce parcours utilisateur en langage naturel]
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Pourquoi cette priorité** : [Expliquer la valeur apportée et la raison de ce niveau de priorité]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Test indépendant** : [Décrire comment cette story peut être testée seule — ex. "Peut être
+entièrement testée en [action spécifique] et livre [valeur spécifique]"]
 
-**Acceptance Scenarios**:
+**Scénarios d'acceptation** :
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Étant donné** [état initial], **quand** [action], **alors** [résultat attendu]
+2. **Étant donné** [état initial], **quand** [action], **alors** [résultat attendu]
 
 ---
 
-### User Story 2 - [Brief Title] (Priority: P2)
+### User Story 2 — [Titre court] (Priorité : P2)
 
-[Describe this user journey in plain language]
+[Décrire ce parcours utilisateur en langage naturel]
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Pourquoi cette priorité** : [Expliquer la valeur apportée et la raison de ce niveau de priorité]
 
-**Independent Test**: [Describe how this can be tested independently]
+**Test indépendant** : [Décrire comment cette story peut être testée seule]
 
-**Acceptance Scenarios**:
+**Scénarios d'acceptation** :
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-### User Story 3 - [Brief Title] (Priority: P3)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Étant donné** [état initial], **quand** [action], **alors** [résultat attendu]
 
 ---
 
-[Add more user stories as needed, each with an assigned priority]
+### User Story 3 — [Titre court] (Priorité : P3)
 
-### Edge Cases
+[Décrire ce parcours utilisateur en langage naturel]
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
+**Pourquoi cette priorité** : [Expliquer la valeur apportée et la raison de ce niveau de priorité]
 
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+**Test indépendant** : [Décrire comment cette story peut être testée seule]
 
-## Requirements *(mandatory)*
+**Scénarios d'acceptation** :
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
+1. **Étant donné** [état initial], **quand** [action], **alors** [résultat attendu]
 
-### Functional Requirements
+---
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+[Ajouter d'autres user stories si nécessaire, chacune avec une priorité assignée]
 
-*Example of marking unclear requirements:*
-
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
-
-### Key Entities *(include if feature involves data)*
-
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
-
-## Success Criteria *(mandatory)*
+### Cas limites
 
 <!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
+  ACTION REQUISE : Le contenu de cette section représente des exemples indicatifs.
+  Les remplacer par les vrais cas limites applicables à la fonctionnalité.
 -->
 
-### Measurable Outcomes
+- Que se passe-t-il quand [condition limite] ?
+- Comment le système gère-t-il [scénario d'erreur] ?
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
-
-## Assumptions
+## Exigences *(obligatoires)*
 
 <!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
+  ACTION REQUISE : Le contenu de cette section représente des exemples indicatifs.
+  Les remplacer par les vraies exigences fonctionnelles.
 -->
 
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+### Exigences fonctionnelles
+
+- **EF-001** : Le système DOIT [capacité spécifique, ex. "permettre aux utilisateurs de créer un compte"]
+- **EF-002** : Le système DOIT [capacité spécifique, ex. "valider les adresses e-mail"]
+- **EF-003** : Les utilisateurs DOIVENT pouvoir [interaction clé, ex. "réinitialiser leur mot de passe"]
+- **EF-004** : Le système DOIT [exigence de données, ex. "persister les préférences utilisateur"]
+- **EF-005** : Le système DOIT [comportement, ex. "journaliser tous les événements de sécurité"]
+
+*Exemple de marquage d'exigences non claires :*
+
+- **EF-006** : Le système DOIT authentifier les utilisateurs via [À PRÉCISER : méthode d'auth non spécifiée — email/mot de passe, SSO, OAuth ?]
+- **EF-007** : Le système DOIT conserver les données utilisateur pendant [À PRÉCISER : durée de rétention non spécifiée]
+
+### Entités clés *(inclure si la fonctionnalité implique des données)*
+
+- **[Entité 1]** : [Ce qu'elle représente, attributs clés sans détails d'implémentation]
+- **[Entité 2]** : [Ce qu'elle représente, relations avec les autres entités]
+
+## Critères de succès *(obligatoires)*
+
+<!--
+  ACTION REQUISE : Définir des critères de succès mesurables.
+  Ils doivent être indépendants de la technologie et vérifiables.
+-->
+
+### Résultats mesurables
+
+- **CS-001** : [Métrique mesurable, ex. "Les utilisateurs peuvent finaliser la création de compte en moins de 2 minutes"]
+- **CS-002** : [Métrique mesurable, ex. "Le système supporte 1000 utilisateurs simultanés sans dégradation"]
+- **CS-003** : [Métrique de satisfaction, ex. "90% des utilisateurs réussissent la tâche principale dès le premier essai"]
+- **CS-004** : [Métrique métier, ex. "Réduire de 50% les tickets de support liés à [X]"]
+
+## Hypothèses
+
+<!--
+  ACTION REQUISE : Le contenu de cette section représente des exemples indicatifs.
+  Les remplacer par les vraies hypothèses basées sur des valeurs par défaut raisonnables
+  choisies lorsque la description ne précisait pas certains détails.
+-->
+
+- [Hypothèse sur les utilisateurs cibles, ex. "Les utilisateurs disposent d'une connexion internet stable"]
+- [Hypothèse sur les limites de périmètre, ex. "Le support mobile est hors périmètre pour v1"]
+- [Hypothèse sur les données/environnement, ex. "Le système d'authentification existant sera réutilisé"]
+- [Dépendance vis-à-vis d'un système/service existant, ex. "Nécessite l'accès à l'API de profil utilisateur existante"]
