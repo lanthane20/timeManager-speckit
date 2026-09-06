@@ -1,0 +1,102 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Récurrences</h1>
+    @if (busy()) {
+      <p-progressSpinner styleClass="header-spinner" strokeWidth="4" ariaLabel="Traitement" />
+    }
+  </header>
+
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()!" />
+  }
+  @if (successMessage()) {
+    <p-message severity="success" [text]="successMessage()!" />
+  }
+  @for (warning of warnings(); track warning) {
+    <p-message severity="warn" [text]="warning" />
+  }
+
+  <p-card header="Injecter des absences récurrentes">
+    <form class="recurrence-form" [formGroup]="form">
+      <div class="field">
+        <label for="patternId">Patron de récurrence (identifiant)</label>
+        <input pInputText id="patternId" formControlName="patternId" />
+      </div>
+
+      <div class="field">
+        <label for="dates">Dates à injecter</label>
+        <p-datepicker
+          inputId="dates"
+          formControlName="dates"
+          selectionMode="multiple"
+          dateFormat="dd/mm/yy"
+          [readonlyInput]="true"
+          [showIcon]="true"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="field">
+        <label for="planningFile">Planning école (fichier .xlsx)</label>
+        <input
+          id="planningFile"
+          type="file"
+          accept=".xlsx"
+          (change)="onFileSelected($event)"
+        />
+        @if (selectedFileName()) {
+          <small>{{ selectedFileName() }}</small>
+        }
+      </div>
+
+      <div class="actions">
+        <p-button
+          type="button"
+          label="Injecter les dates saisies"
+          [loading]="busy()"
+          (onClick)="generate()"
+        />
+        <p-button
+          type="button"
+          label="Importer le planning Excel"
+          severity="secondary"
+          [loading]="busy()"
+          (onClick)="importExcel()"
+        />
+      </div>
+    </form>
+  </p-card>
+
+  <p-table
+    [value]="history()"
+    responsiveLayout="stack"
+    breakpoint="768px"
+    dataKey="id"
+    [tableStyle]="{ 'min-width': '40rem' }"
+  >
+    <ng-template pTemplate="caption">Historique des injections</ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Source</th>
+        <th scope="col">Période</th>
+        <th scope="col">Événements créés</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-log>
+      <tr>
+        <td>{{ log.injectedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+        <td><p-tag [value]="sourceLabel(log.source)" /></td>
+        <td>
+          {{ log.periodStart | date: 'dd/MM/yyyy' }} — {{ log.periodEnd | date: 'dd/MM/yyyy' }}
+        </td>
+        <td>{{ log.eventsCreatedCount }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4">Aucune injection enregistrée.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</section>

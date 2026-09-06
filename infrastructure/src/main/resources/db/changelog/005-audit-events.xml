@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="005-create-audit-events" author="timemanager">
+        <createTable tableName="audit_events">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="absence_id" type="CHAR(36)"/>
+            <column name="absence_version_id" type="CHAR(36)"/>
+            <column name="action_type" type="VARCHAR(40)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_role" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value_before" type="TEXT"/>
+            <column name="value_after" type="TEXT"/>
+            <column name="correlation_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occurred_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="audit_events" indexName="idx_audit_events_absence_id">
+            <column name="absence_id"/>
+        </createIndex>
+        <createIndex tableName="audit_events" indexName="idx_audit_events_author_id">
+            <column name="author_id"/>
+        </createIndex>
+        <createIndex tableName="audit_events" indexName="idx_audit_events_occurred_at">
+            <column name="occurred_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="audit_events"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

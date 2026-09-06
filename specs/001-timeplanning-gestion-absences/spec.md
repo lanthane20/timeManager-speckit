@@ -2,7 +2,7 @@
 
 **Branche** : `001-timeplanning-gestion-absences`
 **Créée** : 2026-05-21
-**Statut** : Brouillon
+**Statut** : En implémentation
 **Entrée** : Application interne de gestion des absences et de planning d'équipe TimePlanning
 
 ---
@@ -194,9 +194,10 @@ L'admin technique peut gérer les utilisateurs, les équipes, la hiérarchie N+1
 #### Module Administration (EF-031 à EF-035)
 
 - **EF-031** : Le système DOIT permettre la gestion des utilisateurs (création, modification, désactivation) et leur affectation à des équipes avec un rôle.
+- **EF-031b** : Le système DOIT permettre à l'admin technique (et au manager avec délégation explicite) de configurer le planning contractuel d'un salarié : jours non travaillés récurrents (ex. mercredi pour un mi-temps), avec date d'effet et date de fin. Ces jours sont utilisés par EF-002 dans le calcul des jours ouvrés.
 - **EF-032** : Le système DOIT permettre la gestion des équipes et sous-équipes, incluant la définition de la hiérarchie N+1 et N+2 pour chaque équipe.
 - **EF-033** : Le système DOIT permettre la configuration du mode de validation par équipe (N+1 seul ou N+1 puis N+2), avec un mode global pouvant être surchargé équipe par équipe.
-- **EF-034** : Le système DOIT permettre la gestion complète des types d'absence : code, libellé, couleur, obligation de validation manager, obligation de justificatif, rôles autorisés à saisir, quantification dans les compteurs, remise à zéro annuelle, statut actif/inactif.
+- **EF-034** : Le système DOIT permettre la gestion complète des types d'absence : code, libellé, couleur, obligation de validation manager, obligation de justificatif, rôles autorisés à saisir, quantification dans les compteurs, remise à zéro annuelle (si activée : les compteurs ne comptabilisent que les absences de l'année civile en cours — filtre de date, pas de reset persistant), statut actif/inactif.
 - **EF-035** : L'admin technique NE DOIT avoir accès à aucune donnée individuelle d'absence des salariés.
 
 #### Notifications (EF-036 à EF-037)
@@ -219,7 +220,7 @@ L'admin technique peut gérer les utilisateurs, les équipes, la hiérarchie N+1
 - **PeriodeCloture** : Mois figé par la RH, avec date de clôture et liste des absences rattachées à cette période.
 - **Regularisation** : Absence validée après clôture d'une période, identifiée automatiquement et rattachée à la période concernée pour traitement en paie complémentaire.
 - **RecurrencePattern** : Patron de récurrence pour les absences Ecole ou Jours non travaillés, avec source (saisie manuelle, import, génération) et historique d'injections.
-- **CompteurAbsence** : Agrégat calculé dynamiquement par type quantifié et par salarié (jours pris passés, jours validés à venir, jours en attente).
+- **CompteurAbsence** : Agrégat calculé dynamiquement par type quantifié et par salarié (jours pris passés, jours validés à venir, jours en attente). Aucun état persistant — les valeurs sont recalculées à chaque consultation depuis les données d'absence existantes. Quand `TypeAbsence.resetAnnuel=true`, le calcul est restreint à l'année civile en cours (filtre de date dans la requête de calcul, pas de service de reset périodique).
 
 ---
 
@@ -245,8 +246,8 @@ L'admin technique peut gérer les utilisateurs, les équipes, la hiérarchie N+1
 - Chaque salarié appartient à au moins une équipe avec un N+1 identifié. Un salarié sans N+1 configuré ne peut pas soumettre de demande nécessitant validation — ce cas doit être bloqué avec un message explicite.
 - Les jours fériés utilisés dans le calcul sont les jours fériés légaux français. Les éventuels jours fériés locaux ou conventionnels sont gérés via le mécanisme "jours non travaillés" configuré sur le profil du salarié.
 - La notion de "jours non travaillés" propres à un salarié est configurée au niveau de son profil ou de son type de contrat et ne change pas de façon fréquente.
-- L'authentification des utilisateurs s'appuie sur le système d'authentification existant de l'organisation (SSO ou annuaire interne) — l'application ne gère pas les mots de passe en propre.
-- L'export paie annuel suit un format Excel standardisé qui sera défini avec l'équipe RH lors de la phase de planification. Le format exact n'est pas encore arrêté.
+- L'authentification des utilisateurs s'appuie sur **Google OAuth2 / OIDC** (Authorization Server Google) → JWT Bearer token validé par Spring Security OAuth2 Resource Server. L'application ne gère pas les mots de passe en propre. *Décision technique entérinée en phase de planification — voir plan.md §Contexte technique.*
+- L'export paie annuel suit le format Excel défini avec l'équipe RH en phase de planification. Structure retenue : une ligne par absence validée, colonnes : `Matricule`, `Nom`, `Prénom`, `Équipe`, `Type d'absence` (code + libellé), `Date début`, `Date fin`, `Nb jours ouvrés`, `Statut`, `Période de paie`. Un onglet par mois ; une feuille de synthèse annuelle. Ce format DOIT être validé par la RH avant le démarrage de T115.
 - Les justificatifs (arrêts maladie papier, etc.) ne sont pas stockés dans l'application — leur gestion reste hors périmètre, conformément aux décisions verrouillées du cahier des charges.
 - L'application est accessible via navigateur web sur desktop. Le niveau d'optimisation pour les écrans de planning et RH sur mobile reste une question ouverte à trancher avant la planification technique.
 - La stratégie de relance automatique des validations en attente (rappels email) n'est pas définie en V1 — les managers sont supposés consulter leurs files d'attente sans mécanisme de relance automatique.

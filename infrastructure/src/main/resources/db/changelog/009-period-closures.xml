@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="009-create-period-closures" author="timemanager">
+        <createTable tableName="period_closures">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="year" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="month" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closed_at" type="TIMESTAMP"/>
+            <column name="closed_by_user_id" type="CHAR(36)">
+                <constraints foreignKeyName="fk_period_closures_user"
+                    references="users(id)"/>
+            </column>
+            <column name="status" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="period_closures" columnNames="year,month"
+            constraintName="uq_period_closures_year_month"/>
+
+        <!-- FK depuis absence_versions.period_closure_id -->
+        <addForeignKeyConstraint
+            baseTableName="absence_versions"
+            baseColumnNames="period_closure_id"
+            constraintName="fk_absence_versions_period_closure"
+            referencedTableName="period_closures"
+            referencedColumnNames="id"/>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="absence_versions" constraintName="fk_absence_versions_period_closure"/>
+            <dropTable tableName="period_closures"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

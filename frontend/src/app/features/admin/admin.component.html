@@ -1,0 +1,353 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Administration technique</h1>
+    @if (busy()) {
+      <p-progressSpinner styleClass="header-spinner" strokeWidth="4" ariaLabel="Traitement" />
+    }
+  </header>
+
+  <p-message
+    severity="info"
+    text="Ce module ne donne accès à aucune donnée d'absence individuelle."
+  />
+
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()!" />
+  }
+  @if (successMessage()) {
+    <p-message severity="success" [text]="successMessage()!" />
+  }
+
+  <p-tabs value="users">
+    <p-tablist>
+      <p-tab value="users">Utilisateurs</p-tab>
+      <p-tab value="teams">Équipes</p-tab>
+      <p-tab value="types">Types d'absence</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <p-tabpanel value="users">
+        <p-card header="Créer un utilisateur">
+          <form class="grid-form" [formGroup]="userForm" (ngSubmit)="createUser()">
+            <div class="field">
+              <label for="googleSub">Identifiant Google (sub)</label>
+              <input pInputText id="googleSub" formControlName="googleSub" />
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input pInputText id="email" type="email" formControlName="email" />
+            </div>
+            <div class="field">
+              <label for="firstName">Prénom</label>
+              <input pInputText id="firstName" formControlName="firstName" />
+            </div>
+            <div class="field">
+              <label for="lastName">Nom</label>
+              <input pInputText id="lastName" formControlName="lastName" />
+            </div>
+            <div class="field">
+              <label for="roles">Rôles</label>
+              <p-multiSelect
+                inputId="roles"
+                formControlName="roles"
+                [options]="roleOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+            </div>
+            <div class="actions">
+              <p-button
+                type="submit"
+                label="Créer l'utilisateur"
+                [disabled]="userForm.invalid || busy()"
+                [loading]="busy()"
+              />
+            </div>
+          </form>
+        </p-card>
+
+        <p-card header="Planning contractuel (jours travaillés)">
+          <form class="grid-form" [formGroup]="scheduleForm" (ngSubmit)="defineWorkSchedule()">
+            <div class="field">
+              <label for="scheduleUser">Salarié</label>
+              <p-select
+                inputId="scheduleUser"
+                formControlName="userId"
+                [options]="users()"
+                optionLabel="email"
+                optionValue="id"
+                placeholder="Sélectionner un salarié"
+                appendTo="body"
+              />
+            </div>
+            <div class="field">
+              <label for="workingDays">Jours travaillés</label>
+              <p-multiSelect
+                inputId="workingDays"
+                formControlName="workingDays"
+                [options]="dayOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+            </div>
+            <div class="field">
+              <label for="effectiveFrom">Date d'effet</label>
+              <p-datepicker
+                inputId="effectiveFrom"
+                formControlName="effectiveFrom"
+                dateFormat="dd/mm/yy"
+              />
+            </div>
+            <div class="field">
+              <label for="effectiveUntil">Date de fin (optionnelle)</label>
+              <p-datepicker
+                inputId="effectiveUntil"
+                formControlName="effectiveUntil"
+                dateFormat="dd/mm/yy"
+              />
+            </div>
+            <div class="actions">
+              <p-button
+                type="submit"
+                label="Enregistrer le planning"
+                [disabled]="scheduleForm.invalid || busy()"
+                [loading]="busy()"
+              />
+            </div>
+          </form>
+        </p-card>
+
+        <p-table [value]="users()" responsiveLayout="stack" breakpoint="768px" dataKey="id">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Nom</th>
+              <th scope="col">Email</th>
+              <th scope="col">Rôles</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-user>
+            <tr>
+              <td>{{ user.lastName }} {{ user.firstName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.roles.join(', ') }}</td>
+              <td>
+                <p-tag
+                  [value]="user.active ? 'Actif' : 'Inactif'"
+                  [severity]="user.active ? 'success' : 'secondary'"
+                />
+              </td>
+              <td>
+                @if (user.active) {
+                  <p-button
+                    label="Désactiver"
+                    severity="danger"
+                    [text]="true"
+                    (onClick)="deactivateUser(user)"
+                  />
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5">Aucun utilisateur enregistré.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="teams">
+        <p-card header="Créer une équipe">
+          <form class="grid-form" [formGroup]="teamForm" (ngSubmit)="createTeam()">
+            <div class="field">
+              <label for="teamName">Nom de l'équipe</label>
+              <input pInputText id="teamName" formControlName="name" />
+            </div>
+            <div class="field">
+              <label for="validationMode">Mode de validation</label>
+              <p-select
+                inputId="validationMode"
+                formControlName="validationMode"
+                [options]="validationModeOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+            </div>
+            <div class="field">
+              <label for="n1Manager">Manager N+1</label>
+              <p-select
+                inputId="n1Manager"
+                formControlName="n1ManagerId"
+                [options]="users()"
+                optionLabel="email"
+                optionValue="id"
+                placeholder="Sélectionner un manager"
+                appendTo="body"
+              />
+            </div>
+            <div class="field">
+              <label for="n2Manager">Manager N+2</label>
+              <p-select
+                inputId="n2Manager"
+                formControlName="n2ManagerId"
+                [options]="users()"
+                optionLabel="email"
+                optionValue="id"
+                placeholder="Aucun"
+                [showClear]="true"
+                appendTo="body"
+              />
+            </div>
+            <div class="actions">
+              <p-button
+                type="submit"
+                label="Créer l'équipe"
+                [disabled]="teamForm.invalid || busy()"
+                [loading]="busy()"
+              />
+            </div>
+          </form>
+        </p-card>
+
+        <p-table [value]="teams()" responsiveLayout="stack" breakpoint="768px" dataKey="id">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Équipe</th>
+              <th scope="col">Mode de validation</th>
+              <th scope="col">Statut</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-team>
+            <tr>
+              <td>{{ team.name }}</td>
+              <td>{{ team.validationMode === 'N1_AND_N2' ? 'N+1 puis N+2' : 'N+1 seul' }}</td>
+              <td>
+                <p-tag
+                  [value]="team.active ? 'Active' : 'Inactive'"
+                  [severity]="team.active ? 'success' : 'secondary'"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3">Aucune équipe enregistrée.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="types">
+        <p-card header="Créer un type d'absence">
+          <form class="grid-form" [formGroup]="absenceTypeForm" (ngSubmit)="createAbsenceType()">
+            <div class="field">
+              <label for="typeCode">Code</label>
+              <input pInputText id="typeCode" formControlName="code" />
+            </div>
+            <div class="field">
+              <label for="typeLabel">Libellé</label>
+              <input pInputText id="typeLabel" formControlName="label" />
+            </div>
+            <div class="field">
+              <label for="typeColor">Couleur</label>
+              <input id="typeColor" type="color" formControlName="color" />
+            </div>
+            <div class="field">
+              <label for="typeRoles">Rôles autorisés à saisir</label>
+              <p-multiSelect
+                inputId="typeRoles"
+                formControlName="allowedRoles"
+                [options]="roleOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+            </div>
+            <div class="field checkboxes">
+              <p-checkbox
+                inputId="requiresManagerValidation"
+                formControlName="requiresManagerValidation"
+                [binary]="true"
+              />
+              <label for="requiresManagerValidation">Validation manager obligatoire</label>
+            </div>
+            <div class="field checkboxes">
+              <p-checkbox
+                inputId="requiresJustification"
+                formControlName="requiresJustification"
+                [binary]="true"
+              />
+              <label for="requiresJustification">Justificatif obligatoire</label>
+            </div>
+            <div class="field checkboxes">
+              <p-checkbox inputId="quantified" formControlName="quantified" [binary]="true" />
+              <label for="quantified">Comptabilisé dans les compteurs</label>
+            </div>
+            <div class="field checkboxes">
+              <p-checkbox inputId="annualReset" formControlName="annualReset" [binary]="true" />
+              <label for="annualReset">Remise à zéro annuelle</label>
+            </div>
+            <div class="field checkboxes">
+              <p-checkbox inputId="allowsOverlap" formControlName="allowsOverlap" [binary]="true" />
+              <label for="allowsOverlap">Chevauchement autorisé</label>
+            </div>
+            <div class="actions">
+              <p-button
+                type="submit"
+                label="Créer le type"
+                [disabled]="absenceTypeForm.invalid || busy()"
+                [loading]="busy()"
+              />
+            </div>
+          </form>
+        </p-card>
+
+        <p-table [value]="absenceTypes()" responsiveLayout="stack" breakpoint="768px" dataKey="id">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Libellé</th>
+              <th scope="col">Compteurs</th>
+              <th scope="col">Remise à zéro</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-type>
+            <tr>
+              <td>
+                <span class="swatch" [style.background]="type.color"></span>{{ type.code }}
+              </td>
+              <td>{{ type.label }}</td>
+              <td>{{ type.quantified ? 'Oui' : 'Non' }}</td>
+              <td>{{ type.annualReset ? 'Annuelle' : 'Cumulative' }}</td>
+              <td>
+                <p-tag
+                  [value]="type.active ? 'Actif' : 'Inactif'"
+                  [severity]="type.active ? 'success' : 'secondary'"
+                />
+              </td>
+              <td>
+                <p-button
+                  [label]="type.active ? 'Désactiver' : 'Réactiver'"
+                  [text]="true"
+                  (onClick)="toggleAbsenceType(type)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6">Aucun type d'absence enregistré.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</section>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="007-create-absence-versions" author="timemanager">
+        <createTable tableName="absence_versions">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="absence_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_absence_versions_absence"
+                    references="absences(id)"/>
+            </column>
+            <column name="version_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="half_day_start" type="VARCHAR(10)"/>
+            <column name="half_day_end" type="VARCHAR(10)"/>
+            <column name="working_days" type="DECIMAL(5,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refusal_reason" type="TEXT"/>
+            <column name="cancellation_reason" type="TEXT"/>
+            <column name="submitted_by" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_absence_versions_submitter"
+                    references="users(id)"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="period_closure_id" type="CHAR(36)"/>
+            <column name="is_regularisation" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- FK vers absence.current_version_id maintenant que absence_versions existe -->
+        <addForeignKeyConstraint
+            baseTableName="absences"
+            baseColumnNames="current_version_id"
+            constraintName="fk_absences_current_version"
+            referencedTableName="absence_versions"
+            referencedColumnNames="id"/>
+
+        <createIndex tableName="absence_versions" indexName="idx_absence_versions_absence_id">
+            <column name="absence_id"/>
+        </createIndex>
+        <createIndex tableName="absence_versions" indexName="idx_absence_versions_active">
+            <column name="active"/>
+        </createIndex>
+        <createIndex tableName="absence_versions" indexName="idx_absence_versions_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="absence_versions" indexName="idx_absence_versions_start_date">
+            <column name="start_date"/>
+        </createIndex>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="absences" constraintName="fk_absences_current_version"/>
+            <dropTable tableName="absence_versions"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

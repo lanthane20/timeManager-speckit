@@ -1,0 +1,1098 @@
+openapi: 3.1.0
+info:
+  title: TimePlanning API
+  version: 1.0.0
+  description: |
+    API REST de l'application TimePlanning — Gestion des absences.
+    Tous les endpoints requièrent un JWT Bearer Google OAuth2 valide.
+    Versionnée sous `/api/v1/`.
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Développement local
+  - url: https://timemanager.internal/api/v1
+    description: Production
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ── Énumérations ─────────────────────────────────────────────
+
+    AbsenceSimplifiedStatus:
+      type: string
+      enum: [EN_ATTENTE, VALIDEE, REFUSEE, ANNULEE]
+
+    AbsenceVersionStatus:
+      type: string
+      enum: [EN_ATTENTE, VALIDEE_N1, VALIDEE, REFUSEE, ANNULEE]
+
+    HalfDayType:
+      type: string
+      enum: [NONE, AM, PM]
+
+    UserRole:
+      type: string
+      enum: [SALARIE, MANAGER, RH, ADMIN]
+
+    ValidationMode:
+      type: string
+      enum: [N1_ONLY, N1_AND_N2]
+
+    # ── Ressources communes ──────────────────────────────────────
+
+    ErrorResponse:
+      type: object
+      required: [correlationId, status, message]
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+        status:
+          type: integer
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+
+    # ── Absence ─────────────────────────────────────────────────
+
+    AbsenceRequest:
+      type: object
+      required: [absenceTypeId, startDate, endDate]
+      properties:
+        absenceTypeId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        halfDayStart:
+          $ref: '#/components/schemas/HalfDayType'
+        halfDayEnd:
+          $ref: '#/components/schemas/HalfDayType'
+
+    AbsenceSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        absenceTypeCode:
+          type: string
+        absenceTypeLabel:
+          type: string
+        absenceTypeColor:
+          type: string
+        status:
+          $ref: '#/components/schemas/AbsenceSimplifiedStatus'
+        currentVersion:
+          $ref: '#/components/schemas/VersionSummary'
+        createdAt:
+          type: string
+          format: date-time
+
+    VersionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        halfDayStart:
+          $ref: '#/components/schemas/HalfDayType'
+        halfDayEnd:
+          $ref: '#/components/schemas/HalfDayType'
+        workingDays:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/AbsenceVersionStatus'
+        refusalReason:
+          type: string
+          nullable: true
+
+    AbsenceDetail:
+      allOf:
+        - $ref: '#/components/schemas/AbsenceSummary'
+        - type: object
+          properties:
+            auditHistory:
+              type: array
+              items:
+                $ref: '#/components/schemas/AuditEvent'
+
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        actionType:
+          type: string
+        authorId:
+          type: string
+          format: uuid
+        authorRole:
+          type: string
+        valueBefore:
+          type: object
+          nullable: true
+        valueAfter:
+          type: object
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+          format: uuid
+
+    ValidationRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [VALIDATE, REFUSE]
+        refusalReason:
+          type: string
+          description: Obligatoire si decision=REFUSE
+
+    CancellationRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Obligatoire si annulation par manager ; optionnel pour le salarié
+
+    ModificationRequest:
+      allOf:
+        - $ref: '#/components/schemas/AbsenceRequest'
+
+    # ── Compteurs ───────────────────────────────────────────────
+
+    AbsenceCounter:
+      type: object
+      properties:
+        absenceTypeId:
+          type: string
+          format: uuid
+        absenceTypeCode:
+          type: string
+        absenceTypeLabel:
+          type: string
+        daysTakenPast:
+          type: number
+          format: double
+        daysValidatedFuture:
+          type: number
+          format: double
+        daysPending:
+          type: number
+          format: double
+
+    # ── Planning ─────────────────────────────────────────────────
+
+    PlanningEntry:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          format: uuid
+        employeeFirstName:
+          type: string
+        employeeLastName:
+          type: string
+        absenceTypeCode:
+          type: string
+        absenceTypeColor:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/AbsenceSimplifiedStatus'
+
+    # ── Administration ───────────────────────────────────────────
+
+    AbsenceTypeRequest:
+      type: object
+      required: [code, label, color]
+      properties:
+        code:
+          type: string
+          maxLength: 20
+        label:
+          type: string
+          maxLength: 100
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        requiresManagerValidation:
+          type: boolean
+          default: true
+        requiresJustification:
+          type: boolean
+          default: false
+        allowedRoles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRole'
+        isQuantified:
+          type: boolean
+          default: true
+        annualReset:
+          type: boolean
+          default: true
+        allowsOverlap:
+          type: boolean
+          default: false
+        active:
+          type: boolean
+          default: true
+
+    TeamRequest:
+      type: object
+      required: [name, validationMode, n1ManagerId]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        parentTeamId:
+          type: string
+          format: uuid
+          nullable: true
+        validationMode:
+          $ref: '#/components/schemas/ValidationMode'
+        n1ManagerId:
+          type: string
+          format: uuid
+        n2ManagerId:
+          type: string
+          format: uuid
+          nullable: true
+
+    UserRequest:
+      type: object
+      required: [googleSub, email, firstName, lastName]
+      properties:
+        googleSub:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRole'
+        teamId:
+          type: string
+          format: uuid
+
+    # ── Clôture et paie ─────────────────────────────────────────
+
+    PeriodeClotureResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        year:
+          type: integer
+        month:
+          type: integer
+        status:
+          type: string
+          enum: [OPEN, CLOSED]
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    RegularisationEntry:
+      type: object
+      properties:
+        absenceId:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        absenceTypeCode:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        workingDays:
+          type: number
+          format: double
+        validatedAt:
+          type: string
+          format: date-time
+
+paths:
+  # ════════════════════════════════════════════════════
+  # Absences — salarié (US1, US4)
+  # ════════════════════════════════════════════════════
+
+  /absences:
+    get:
+      summary: Liste des absences du salarié connecté
+      operationId: getMyAbsences
+      tags: [Absences]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AbsenceSimplifiedStatus'
+      responses:
+        '200':
+          description: Liste des absences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbsenceSummary'
+    post:
+      summary: Créer une demande d'absence (EF-001)
+      operationId: createAbsence
+      tags: [Absences]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceRequest'
+      responses:
+        '201':
+          description: Demande créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceSummary'
+        '409':
+          description: Chevauchement détecté (EF-004)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /absences/{id}:
+    get:
+      summary: Détail d'une absence avec historique d'audit
+      operationId: getAbsenceById
+      tags: [Absences]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Détail de l'absence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDetail'
+        '404':
+          description: Absence non trouvée
+
+  /absences/{id}/cancel:
+    post:
+      summary: Annuler une demande non encore validée (EF-006)
+      operationId: cancelAbsence
+      tags: [Absences]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Demande annulée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceSummary'
+        '409':
+          description: Impossible d'annuler (déjà validée)
+
+  /absences/{id}/modify:
+    post:
+      summary: Demander la modification d'une absence validée (EF-007)
+      operationId: requestAbsenceModification
+      tags: [Absences]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificationRequest'
+      responses:
+        '200':
+          description: Nouvelle version créée, ancienne reste active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceSummary'
+
+  # ════════════════════════════════════════════════════
+  # Compteurs (US1 — EF-018 à EF-020)
+  # ════════════════════════════════════════════════════
+
+  /absences/counters:
+    get:
+      summary: Compteurs de consommation du salarié connecté
+      operationId: getMyCounters
+      tags: [Compteurs]
+      responses:
+        '200':
+          description: Compteurs par type d'absence quantifié
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbsenceCounter'
+
+  /absences/counters/{employeeId}:
+    get:
+      summary: Compteurs d'un salarié (Manager / RH seulement)
+      operationId: getCountersByEmployee
+      tags: [Compteurs]
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Compteurs du salarié
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbsenceCounter'
+        '403':
+          description: Accès refusé
+
+  # ════════════════════════════════════════════════════
+  # Validation — manager (US2, US3)
+  # ════════════════════════════════════════════════════
+
+  /manager/absences/pending:
+    get:
+      summary: File de validation du manager connecté
+      operationId: getPendingAbsencesForManager
+      tags: [Validation Manager]
+      parameters:
+        - name: teamId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Demandes en attente dans le périmètre du manager
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbsenceSummary'
+
+  /manager/absences/{id}/validate:
+    post:
+      summary: Valider ou refuser une demande (EF-009 à EF-012)
+      operationId: validateAbsence
+      tags: [Validation Manager]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+      responses:
+        '200':
+          description: Décision enregistrée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceSummary'
+        '400':
+          description: Motif de refus manquant (EF-011)
+        '403':
+          description: Auto-validation interdite (EF-010)
+
+  /manager/absences/{id}/cancel:
+    post:
+      summary: Annuler une absence validée (EF-013)
+      operationId: cancelValidatedAbsence
+      tags: [Validation Manager]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancellationRequest'
+      responses:
+        '200':
+          description: Absence annulée
+
+  /manager/absences:
+    post:
+      summary: Saisir une absence pour un salarié du périmètre (EF-014)
+      operationId: createAbsenceOnBehalfOf
+      tags: [Validation Manager]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/AbsenceRequest'
+                - type: object
+                  required: [employeeId]
+                  properties:
+                    employeeId:
+                      type: string
+                      format: uuid
+      responses:
+        '201':
+          description: Absence créée pour le salarié
+
+  # ════════════════════════════════════════════════════
+  # Planning mensuel (US2 — EF-015 à EF-017)
+  # ════════════════════════════════════════════════════
+
+  /planning:
+    get:
+      summary: Planning mensuel de l'équipe
+      operationId: getMonthlyPlanning
+      tags: [Planning]
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: teamId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Absences du mois pour l'équipe
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanningEntry'
+
+  # ════════════════════════════════════════════════════
+  # RH et Paie (US5 — EF-021 à EF-027)
+  # ════════════════════════════════════════════════════
+
+  /rh/absences:
+    get:
+      summary: Consultation RH de toutes les absences (EF-021)
+      operationId: getAllAbsencesForRH
+      tags: [RH et Paie]
+      parameters:
+        - name: employeeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: absenceTypeCode
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Liste des absences filtrées
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbsenceSummary'
+
+  /rh/absences/{id}/correct:
+    put:
+      summary: Corriger une absence existante (EF-023)
+      operationId: correctAbsence
+      tags: [RH et Paie]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceRequest'
+      responses:
+        '200':
+          description: Absence corrigée (historique conservé)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDetail'
+
+  /rh/closures:
+    get:
+      summary: Liste des périodes de clôture
+      operationId: getClosures
+      tags: [RH et Paie]
+      responses:
+        '200':
+          description: Périodes de clôture
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PeriodeClotureResponse'
+    post:
+      summary: Clôturer une période mensuelle (EF-024)
+      operationId: closeMonth
+      tags: [RH et Paie]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [year, month]
+              properties:
+                year:
+                  type: integer
+                month:
+                  type: integer
+                  minimum: 1
+                  maximum: 12
+      responses:
+        '201':
+          description: Période clôturée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodeClotureResponse'
+        '409':
+          description: Période déjà clôturée
+
+  /rh/closures/{closureId}/regularisations:
+    get:
+      summary: Régularisations d'une période clôturée (EF-026)
+      operationId: getRegularisations
+      tags: [RH et Paie]
+      parameters:
+        - name: closureId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Liste des régularisations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegularisationEntry'
+
+  /rh/export/payroll/{year}:
+    get:
+      summary: Export Excel annuel paie (EF-027, CS-005)
+      operationId: exportAnnualPayroll
+      tags: [RH et Paie]
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fichier Excel
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  # ════════════════════════════════════════════════════
+  # Récurrences (US6 — EF-028 à EF-030)
+  # ════════════════════════════════════════════════════
+
+  /recurrences:
+    get:
+      summary: Liste des patrons de récurrence
+      operationId: getRecurrencePatterns
+      tags: [Récurrences]
+      responses:
+        '200':
+          description: Patrons de récurrence de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      summary: Créer un patron de récurrence (saisie unitaire)
+      operationId: createRecurrencePattern
+      tags: [Récurrences]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employeeId, absenceTypeId, dates]
+              properties:
+                employeeId:
+                  type: string
+                  format: uuid
+                absenceTypeId:
+                  type: string
+                  format: uuid
+                dates:
+                  type: array
+                  items:
+                    type: string
+                    format: date
+      responses:
+        '201':
+          description: Patron créé
+
+  /recurrences/import:
+    post:
+      summary: Import Excel de planning école (EF-028)
+      operationId: importRecurrenceExcel
+      tags: [Récurrences]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                employeeId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Import effectué avec avertissements éventuels
+
+  /recurrences/{id}/generate:
+    post:
+      summary: Générer les absences pour une période (EF-028)
+      operationId: generateRecurrenceEvents
+      tags: [Récurrences]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to]
+              properties:
+                from:
+                  type: string
+                  format: date
+                to:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Absences générées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eventsCreated:
+                    type: integer
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+
+  /recurrences/injections:
+    get:
+      summary: Historique des injections (EF-029)
+      operationId: getInjectionHistory
+      tags: [Récurrences]
+      responses:
+        '200':
+          description: Journal des injections
+
+  # ════════════════════════════════════════════════════
+  # Administration technique (US7 — EF-031 à EF-035)
+  # ════════════════════════════════════════════════════
+
+  /admin/users:
+    get:
+      summary: Liste des utilisateurs
+      operationId: listUsers
+      tags: [Administration]
+      responses:
+        '200':
+          description: Utilisateurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      summary: Créer un utilisateur (EF-031)
+      operationId: createUser
+      tags: [Administration]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '201':
+          description: Utilisateur créé
+
+  /admin/users/{id}:
+    put:
+      summary: Modifier un utilisateur (EF-031)
+      operationId: updateUser
+      tags: [Administration]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Utilisateur mis à jour
+
+  /admin/users/{id}/deactivate:
+    post:
+      summary: Désactiver un utilisateur (EF-031)
+      operationId: deactivateUser
+      tags: [Administration]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Utilisateur désactivé
+
+  /admin/teams:
+    get:
+      summary: Liste des équipes
+      operationId: listTeams
+      tags: [Administration]
+      responses:
+        '200':
+          description: Équipes
+    post:
+      summary: Créer une équipe (EF-032)
+      operationId: createTeam
+      tags: [Administration]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+      responses:
+        '201':
+          description: Équipe créée
+
+  /admin/teams/{id}:
+    put:
+      summary: Modifier une équipe — hiérarchie et mode de validation (EF-032, EF-033)
+      operationId: updateTeam
+      tags: [Administration]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+      responses:
+        '200':
+          description: Équipe mise à jour
+
+  /admin/absence-types:
+    get:
+      summary: Liste des types d'absence
+      operationId: listAbsenceTypes
+      tags: [Administration]
+      responses:
+        '200':
+          description: Types d'absence
+    post:
+      summary: Créer un type d'absence (EF-034)
+      operationId: createAbsenceType
+      tags: [Administration]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceTypeRequest'
+      responses:
+        '201':
+          description: Type créé et immédiatement disponible
+
+  /admin/absence-types/{id}:
+    put:
+      summary: Modifier un type d'absence (EF-034)
+      operationId: updateAbsenceType
+      tags: [Administration]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceTypeRequest'
+      responses:
+        '200':
+          description: Type mis à jour

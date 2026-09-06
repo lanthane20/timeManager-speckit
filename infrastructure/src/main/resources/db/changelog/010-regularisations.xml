@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="010-create-regularisations" author="timemanager">
+        <createTable tableName="regularisations">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="period_closure_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_regularisations_period"
+                    references="period_closures(id)"/>
+            </column>
+            <column name="absence_version_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_regularisations_version"
+                    references="absence_versions(id)"/>
+            </column>
+            <column name="employee_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_regularisations_employee"
+                    references="users(id)"/>
+            </column>
+            <column name="detected_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="regularisations"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="006-create-absences" author="timemanager">
+        <createTable tableName="absences">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_absences_employee"
+                    references="users(id)"/>
+            </column>
+            <column name="absence_type_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_absences_type"
+                    references="absence_types(id)"/>
+            </column>
+            <column name="team_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_absences_team"
+                    references="teams(id)"/>
+            </column>
+            <column name="current_version_id" type="CHAR(36)"/>
+            <column name="simplified_status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="absences" indexName="idx_absences_employee_id">
+            <column name="employee_id"/>
+        </createIndex>
+        <createIndex tableName="absences" indexName="idx_absences_team_id">
+            <column name="team_id"/>
+        </createIndex>
+        <createIndex tableName="absences" indexName="idx_absences_simplified_status">
+            <column name="simplified_status"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="absences"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

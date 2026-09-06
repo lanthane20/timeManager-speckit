@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  Checkstyle TimePlanning — Constitution Principe I
+  Complexité cyclomatique ≤ 10 par méthode.
+  Formatage délégué à Spotless/Google Java Format.
+-->
+<module name="Checker">
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Permet les dérogations locales et documentées via @SuppressWarnings("checkstyle:Regle") -->
+    <module name="SuppressWarningsFilter"/>
+
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+
+        <!-- Complexité cyclomatique : bloquant à 11 -->
+        <module name="CyclomaticComplexity">
+            <property name="max" value="10"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <!-- Complexité NPath (code paths) -->
+        <module name="NPathComplexity">
+            <property name="max" value="200"/>
+        </module>
+
+        <!-- Longueur de méthode raisonnable -->
+        <module name="MethodLength">
+            <property name="max" value="50"/>
+            <property name="countEmpty" value="false"/>
+        </module>
+
+        <!-- Paramètres de méthode.
+             Limité à METHOD_DEF : les constructeurs d'agrégats et d'entités portent
+             légitimement un paramètre par champ, et introduire un builder pour les
+             contourner serait une abstraction non nécessaire (Principe I — YAGNI). -->
+        <module name="ParameterNumber">
+            <property name="max" value="7"/>
+            <property name="tokens" value="METHOD_DEF"/>
+        </module>
+
+        <!-- Aucun import générique (wildcard) -->
+        <module name="AvoidStarImport"/>
+
+        <!-- Imports inutilisés -->
+        <module name="UnusedImports"/>
+
+        <!-- Constantes mal nommées -->
+        <module name="ConstantName"/>
+
+        <!-- Noms de méthodes en camelCase -->
+        <module name="MethodName"/>
+
+        <!-- Noms de variables locales -->
+        <module name="LocalVariableName"/>
+
+        <!-- Noms de paramètres -->
+        <module name="ParameterName"/>
+
+        <!-- Accolades obligatoires sur les blocs -->
+        <module name="NeedBraces"/>
+
+        <!-- Pas de classe vide -->
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+        </module>
+
+        <!-- Pas de retour multiple dans les méthodes courtes -->
+        <module name="ReturnCount">
+            <property name="max" value="3"/>
+        </module>
+    </module>
+
+    <!-- Taille de fichier -->
+    <module name="FileLength">
+        <property name="max" value="400"/>
+    </module>
+
+    <!-- Pas de tabulations (Google Java Format utilise des espaces) -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="false"/>
+    </module>
+</module>
