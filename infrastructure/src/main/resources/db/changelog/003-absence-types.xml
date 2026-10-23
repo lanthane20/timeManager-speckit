@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="003-create-absence-types" author="timemanager">
+        <createTable tableName="absence_types">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="label" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color" type="VARCHAR(7)"/>
+            <column name="requires_manager_validation" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requires_justification" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_quantified" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annual_reset" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="allows_overlap" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="absence_type_roles">
+            <column name="absence_type_id" type="CHAR(36)">
+                <constraints nullable="false"
+                    foreignKeyName="fk_absence_type_roles_type"
+                    references="absence_types(id)"/>
+            </column>
+            <column name="role" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="absence_type_roles" columnNames="absence_type_id,role"
+            constraintName="pk_absence_type_roles"/>
+
+        <!-- Données de référence — types d'absence par défaut -->
+        <insert tableName="absence_types">
+            <column name="id" value="00000000-0000-0000-0000-000000000001"/>
+            <column name="code" value="CP"/>
+            <column name="label" value="Congés payés"/>
+            <column name="color" value="#4CAF50"/>
+            <column name="requires_manager_validation" valueBoolean="true"/>
+            <column name="requires_justification" valueBoolean="false"/>
+            <column name="is_quantified" valueBoolean="true"/>
+            <column name="annual_reset" valueBoolean="true"/>
+            <column name="allows_overlap" valueBoolean="false"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="absence_types">
+            <column name="id" value="00000000-0000-0000-0000-000000000002"/>
+            <column name="code" value="RTT"/>
+            <column name="label" value="RTT"/>
+            <column name="color" value="#2196F3"/>
+            <column name="requires_manager_validation" valueBoolean="true"/>
+            <column name="requires_justification" valueBoolean="false"/>
+            <column name="is_quantified" valueBoolean="true"/>
+            <column name="annual_reset" valueBoolean="true"/>
+            <column name="allows_overlap" valueBoolean="false"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="absence_types">
+            <column name="id" value="00000000-0000-0000-0000-000000000003"/>
+            <column name="code" value="ECOLE"/>
+            <column name="label" value="École / Alternance"/>
+            <column name="color" value="#FF9800"/>
+            <column name="requires_manager_validation" valueBoolean="false"/>
+            <column name="requires_justification" valueBoolean="false"/>
+            <column name="is_quantified" valueBoolean="false"/>
+            <column name="annual_reset" valueBoolean="false"/>
+            <column name="allows_overlap" valueBoolean="true"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <rollback>
+            <dropTable tableName="absence_type_roles"/>
+            <dropTable tableName="absence_types"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

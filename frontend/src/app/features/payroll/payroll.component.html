@@ -1,0 +1,264 @@
+<section class="page">
+  <header class="page-header">
+    <h1>RH et paie</h1>
+    @if (busy()) {
+      <p-progressSpinner styleClass="header-spinner" strokeWidth="4" ariaLabel="Traitement" />
+    }
+  </header>
+
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()!" />
+  }
+  @if (successMessage()) {
+    <p-message severity="success" [text]="successMessage()!" />
+  }
+
+  <p-tabs value="closure">
+    <p-tablist>
+      <p-tab value="closure">Clôture et régularisations</p-tab>
+      <p-tab value="absences">Absences</p-tab>
+      <p-tab value="entry">Saisie et correction</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <p-tabpanel value="closure">
+        <p-card header="Clôture mensuelle">
+          <form class="inline-form" [formGroup]="closureForm">
+            <div class="field">
+              <label for="closureYear">Année</label>
+              <p-inputNumber inputId="closureYear" formControlName="year" [useGrouping]="false" />
+            </div>
+            <div class="field">
+              <label for="closureMonth">Mois</label>
+              <p-select
+                inputId="closureMonth"
+                formControlName="month"
+                [options]="monthOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+            </div>
+            <p-button
+              label="Clôturer la période"
+              [loading]="busy()"
+              (onClick)="closePeriod()"
+            />
+            <p-button
+              label="Filtrer les régularisations"
+              severity="secondary"
+              [text]="true"
+              (onClick)="loadRegularisations(true)"
+            />
+            <p-button
+              label="Toutes les régularisations"
+              severity="secondary"
+              [text]="true"
+              (onClick)="loadRegularisations()"
+            />
+          </form>
+        </p-card>
+
+        <p-card header="Export annuel paie">
+          <div class="inline-form">
+            <div class="field">
+              <label for="exportYear">Année</label>
+              <p-inputNumber
+                inputId="exportYear"
+                [ngModel]="exportYear()"
+                (ngModelChange)="exportYear.set($event)"
+                [useGrouping]="false"
+              />
+            </div>
+            <p-button
+              label="Télécharger l'export Excel"
+              icon="pi pi-download"
+              [loading]="busy()"
+              (onClick)="downloadExport()"
+            />
+          </div>
+        </p-card>
+
+        <p-table
+          [value]="regularisations()"
+          responsiveLayout="stack"
+          breakpoint="768px"
+          [tableStyle]="{ 'min-width': '36rem' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Salarié</th>
+              <th scope="col">Détectée le</th>
+              <th scope="col">Description</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-entry>
+            <tr>
+              <td>{{ entry.employeeId }}</td>
+              <td>{{ entry.detectedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ entry.description }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3">Aucune régularisation sur le périmètre affiché.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="absences">
+        <form class="inline-form" [formGroup]="filterForm">
+          <div class="field">
+            <label for="filterEmployee">Salarié (identifiant)</label>
+            <input pInputText id="filterEmployee" formControlName="employeeId" />
+          </div>
+          <div class="field">
+            <label for="filterTeam">Équipe (identifiant)</label>
+            <input pInputText id="filterTeam" formControlName="teamId" />
+          </div>
+          <div class="field">
+            <label for="filterType">Type d'absence</label>
+            <p-select
+              inputId="filterType"
+              formControlName="typeId"
+              [options]="absenceTypes()"
+              optionLabel="label"
+              optionValue="id"
+              placeholder="Tous"
+              [showClear]="true"
+              appendTo="body"
+            />
+          </div>
+          <div class="field">
+            <label for="filterFrom">Du</label>
+            <p-datepicker inputId="filterFrom" formControlName="from" dateFormat="dd/mm/yy" />
+          </div>
+          <div class="field">
+            <label for="filterTo">Au</label>
+            <p-datepicker inputId="filterTo" formControlName="to" dateFormat="dd/mm/yy" />
+          </div>
+          <p-button label="Rechercher" [loading]="busy()" (onClick)="searchAbsences()" />
+        </form>
+
+        <p-table
+          [value]="absences()"
+          responsiveLayout="stack"
+          breakpoint="768px"
+          dataKey="id"
+          [tableStyle]="{ 'min-width': '40rem' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Salarié</th>
+              <th scope="col">Type</th>
+              <th scope="col">Du</th>
+              <th scope="col">Au</th>
+              <th scope="col">Jours ouvrés</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-absence>
+            <tr>
+              <td>{{ absence.employeeId }}</td>
+              <td>{{ absence.absenceTypeLabel }}</td>
+              <td>{{ absence.startDate | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ absence.endDate | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ absence.workingDays }}</td>
+              <td><p-tag [value]="absence.status" /></td>
+              <td>
+                <p-button label="Corriger" [text]="true" (onClick)="startCorrection(absence)" />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7">Aucune absence pour ces critères.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="entry">
+        <p-card
+          [header]="
+            absenceToCorrect() ? 'Corriger une absence' : 'Saisir une absence spéciale'
+          "
+        >
+          <form class="entry-form" [formGroup]="absenceForm" (ngSubmit)="submitAbsence()">
+            <div class="field">
+              <label for="entryEmployee">Salarié (identifiant)</label>
+              <input
+                pInputText
+                id="entryEmployee"
+                formControlName="employeeId"
+                [readOnly]="absenceToCorrect() !== null"
+              />
+            </div>
+            <div class="field">
+              <label for="entryType">Type d'absence</label>
+              <p-select
+                inputId="entryType"
+                formControlName="absenceTypeId"
+                [options]="absenceTypes()"
+                optionLabel="label"
+                optionValue="id"
+                placeholder="Sélectionner un type"
+                appendTo="body"
+              />
+            </div>
+            <div class="field">
+              <label for="entryStart">Date de début</label>
+              <p-datepicker inputId="entryStart" formControlName="startDate" dateFormat="dd/mm/yy" />
+            </div>
+            <div class="field">
+              <label for="entryHalfStart">Début</label>
+              <p-select
+                inputId="entryHalfStart"
+                formControlName="halfDayStart"
+                [options]="halfDayOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+            </div>
+            <div class="field">
+              <label for="entryEnd">Date de fin</label>
+              <p-datepicker inputId="entryEnd" formControlName="endDate" dateFormat="dd/mm/yy" />
+            </div>
+            <div class="field">
+              <label for="entryHalfEnd">Fin</label>
+              <p-select
+                inputId="entryHalfEnd"
+                formControlName="halfDayEnd"
+                [options]="halfDayOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="actions">
+              <p-button
+                type="submit"
+                [label]="absenceToCorrect() ? 'Enregistrer la correction' : 'Enregistrer l\'absence'"
+                [disabled]="absenceForm.invalid || busy()"
+                [loading]="busy()"
+              />
+              @if (absenceToCorrect()) {
+                <p-button
+                  type="button"
+                  label="Abandonner la correction"
+                  severity="secondary"
+                  [text]="true"
+                  (onClick)="cancelCorrection()"
+                />
+              }
+            </div>
+          </form>
+        </p-card>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</section>

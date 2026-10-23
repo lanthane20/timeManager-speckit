@@ -1,0 +1,49 @@
+# Maven
+target/
+*.class
+*.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Node / Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+
+# Environnement
+.env
+*.env.local
+!.env.example
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+!frontend/.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rapports de tests
+allure-results/
+allure-report/
+.allure/
+frontend/playwright-report/
+frontend/e2e/.results/
+
+# Logs
+*.log
+logs/
+
+# Temp
+*.tmp
+*.bak

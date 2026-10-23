@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <include file="001-users.xml" relativeToChangelogFile="true"/>
+    <include file="002-teams.xml" relativeToChangelogFile="true"/>
+    <include file="003-absence-types.xml" relativeToChangelogFile="true"/>
+    <include file="004-public-holidays.xml" relativeToChangelogFile="true"/>
+    <include file="005-audit-events.xml" relativeToChangelogFile="true"/>
+    <include file="006-absences.xml" relativeToChangelogFile="true"/>
+    <include file="007-absence-versions.xml" relativeToChangelogFile="true"/>
+    <include file="009-period-closures.xml" relativeToChangelogFile="true"/>
+    <include file="010-regularisations.xml" relativeToChangelogFile="true"/>
+    <include file="011-recurrence-patterns.xml" relativeToChangelogFile="true"/>
+    <include file="012-recurrence-injection-logs.xml" relativeToChangelogFile="true"/>
+    <include file="013-work-schedules.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
