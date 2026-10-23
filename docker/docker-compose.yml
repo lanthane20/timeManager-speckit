@@ -20,6 +20,20 @@ services:
       timeout: 5s
       retries: 3
 
+  # Fournisseur d'identité des tests end-to-end (remplace Google) : docker compose --profile e2e up -d
+  keycloak:
+    image: keycloak/keycloak:26.4.0
+    container_name: timemanager-keycloak
+    profiles: ["e2e"]
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ../frontend/e2e/keycloak:/opt/keycloak/data/import:ro
+
   mailhog:
     image: mailhog/mailhog:v1.0.1
     container_name: timemanager-mail

@@ -1,0 +1,57 @@
+{
+  "realm": "timeplanning",
+  "displayName": "TimePlanning — tests end-to-end",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "timeplanning-frontend",
+      "name": "TimePlanning (frontend, tests E2E)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "6f2d8a1e-3b4c-4d5e-8f60-000000000001",
+      "username": "lea.martin",
+      "email": "lea.martin@timemanager.fr",
+      "emailVerified": true,
+      "firstName": "Léa",
+      "lastName": "Martin",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "demo-salarie", "temporary": false }]
+    },
+    {
+      "id": "6f2d8a1e-3b4c-4d5e-8f60-000000000002",
+      "username": "manon.dubois",
+      "email": "manon.dubois@timemanager.fr",
+      "emailVerified": true,
+      "firstName": "Manon",
+      "lastName": "Dubois",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "demo-manager", "temporary": false }]
+    },
+    {
+      "id": "6f2d8a1e-3b4c-4d5e-8f60-000000000003",
+      "username": "rachel.hubert",
+      "email": "rachel.hubert@timemanager.fr",
+      "emailVerified": true,
+      "firstName": "Rachel",
+      "lastName": "Hubert",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "demo-rh", "temporary": false }]
+    }
+  ]
+}

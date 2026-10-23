@@ -106,11 +106,12 @@ listés en fin de document comme actions restantes.
   inconnu de la base.
 - Les rôles applicatifs sont chargés depuis la base (`UserRolesLoader`) et non depuis des
   revendications libres du jeton — un jeton ne peut donc pas s'auto-attribuer un rôle.
-- **Mode de test end-to-end** : la CI vide `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` et
-  renseigne `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLIC_KEY_LOCATION` ; Spring valide alors les
-  jetons avec cette seule clé publique, générée à chaque run et jamais versionnée. Ce mode ne
-  s'active que par ces variables : la configuration par défaut reste l'émetteur Google. En
-  production, `PUBLIC_KEY_LOCATION` ne doit jamais être définie.
+- Les rôles exposés au frontend proviennent de la base via `GET /api/v1/me` ; le frontend ne lit
+  plus de revendication `roles` dans le jeton (un jeton Google n'en porte pas).
+- **Tests end-to-end** : un Keycloak jetable remplace Google en CI, par simple changement de
+  `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` ; la validation des jetons est identique à
+  la production. Les mots de passe de `frontend/e2e/keycloak` ne valent que pour ce Keycloak de
+  test et ne sont pas des secrets.
 
 ### A08 — Software and Data Integrity Failures
 

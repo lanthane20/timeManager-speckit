@@ -89,12 +89,12 @@ jobs:
         run: npm run build -- --configuration=production
 
   e2e:
-    name: End-to-end — Playwright / backend + MariaDB
+    name: End-to-end — Playwright / Keycloak + backend + MariaDB
     runs-on: ubuntu-latest
 
-    # Application complète : MariaDB, backend Spring Boot et frontend. Les jetons d'accès sont
-    # signés par les tests avec une paire de clés jetable générée à chaque run : aucun secret
-    # ni compte Google n'est nécessaire.
+    # Application complète : MariaDB, backend Spring Boot et frontend. Un Keycloak de test remplace
+    # Google : les tests se connectent réellement (redirection, /callback, PKCE) avec les comptes
+    # de démonstration de frontend/e2e/keycloak. Aucun secret ni compte Google n'est nécessaire.
     services:
       mariadb:
         image: mariadb:11.4
@@ -138,11 +138,15 @@ jobs:
         working-directory: frontend
         run: npm run e2e:install
 
-      - name: Générer la paire de clés de signature des jetons de test
+      # Les conteneurs de service n'acceptent pas d'arguments : Keycloak est lancé à la main.
+      - name: Démarrer Keycloak (fournisseur d'identité de test)
         run: |
           mkdir -p "$RUNNER_TEMP/e2e"
-          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "$RUNNER_TEMP/e2e/private.pem"
-          openssl rsa -in "$RUNNER_TEMP/e2e/private.pem" -pubout -out "$RUNNER_TEMP/e2e/public.pem"
+          docker run -d --name keycloak -p 8180:8080 \
+            -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+            -v "$GITHUB_WORKSPACE/frontend/e2e/keycloak:/opt/keycloak/data/import:ro" \
+            keycloak/keycloak:26.4.0 start-dev --import-realm
+          timeout 180 bash -c 'until curl -sf http://localhost:8180/realms/timeplanning/.well-known/openid-configuration > /dev/null; do sleep 2; done'
 
       - name: Démarrer le backend
         env:
@@ -151,9 +155,8 @@ jobs:
           DB_PASSWORD: timemanager
           NOTIFICATION_ENABLED: "false"
           MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
-          # Sans issuer-uri, Spring valide les jetons avec la seule clé publique de test.
-          SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
-          SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLIC_KEY_LOCATION: file:${{ runner.temp }}/e2e/public.pem
+          # Même mécanisme qu'avec Google : seul l'émetteur change.
+          SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/timeplanning
         run: |
           nohup java -jar api/target/api-1.0.0-SNAPSHOT.jar > "$RUNNER_TEMP/e2e/backend.log" 2>&1 &
           timeout 180 bash -c 'until curl -sf http://localhost:8080/actuator/health; do sleep 2; done'
@@ -166,7 +169,7 @@ jobs:
       - name: Démarrer le frontend
         working-directory: frontend
         run: |
-          nohup npm start > "$RUNNER_TEMP/e2e/frontend.log" 2>&1 &
+          nohup npm run start:e2e > "$RUNNER_TEMP/e2e/frontend.log" 2>&1 &
           timeout 180 bash -c 'until curl -sf http://localhost:4200 > /dev/null; do sleep 2; done'
 
       - name: Tests end-to-end (Playwright)
@@ -174,8 +177,12 @@ jobs:
         env:
           CI: "true"
           E2E_BASE_URL: http://localhost:4200
-          E2E_JWT_PRIVATE_KEY: ${{ runner.temp }}/e2e/private.pem
+          E2E_KEYCLOAK_URL: http://localhost:8180
         run: npm run e2e
+
+      - name: Journal Keycloak
+        if: failure()
+        run: docker logs keycloak > "$RUNNER_TEMP/e2e/keycloak.log" 2>&1
 
       - name: Upload rapport Playwright
         if: always()
