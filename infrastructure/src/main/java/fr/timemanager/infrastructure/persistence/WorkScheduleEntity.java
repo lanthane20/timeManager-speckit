@@ -14,10 +14,10 @@ import java.util.UUID;
 public class WorkScheduleEntity {
 
   @Id
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String id;
 
-  @Column(name = "user_id", nullable = false, updatable = false)
+  @Column(name = "user_id", nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String userId;
 
   @Column(name = "working_days_pattern", nullable = false)

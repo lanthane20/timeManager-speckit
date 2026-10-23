@@ -20,7 +20,9 @@ import java.util.UUID;
 @Table(name = "absence_types")
 public class AbsenceTypeEntity {
 
-  @Id private String id;
+  @Id
+  @Column(columnDefinition = "CHAR(36)")
+  private String id;
 
   @Column(nullable = false, unique = true)
   private String code;
@@ -37,7 +39,9 @@ public class AbsenceTypeEntity {
   private boolean requiresJustification;
 
   @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(name = "absence_type_roles", joinColumns = @JoinColumn(name = "absence_type_id"))
+  @CollectionTable(
+      name = "absence_type_roles",
+      joinColumns = @JoinColumn(name = "absence_type_id", columnDefinition = "CHAR(36)"))
   @Column(name = "role")
   @Enumerated(EnumType.STRING)
   private Set<UserRole> allowedRoles = new HashSet<>();

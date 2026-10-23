@@ -5,6 +5,7 @@ import fr.timemanager.application.dto.payroll.HrAbsenceSearchCriteria;
 import fr.timemanager.domain.absence.Absence;
 import fr.timemanager.domain.absence.AbsenceSimplifiedStatus;
 import fr.timemanager.domain.absence.ExistingAbsenceInfo;
+import fr.timemanager.domain.absence.VersionAbsence;
 import fr.timemanager.domain.shared.DateRange;
 import fr.timemanager.infrastructure.persistence.AbsenceTypeRepository;
 import java.time.LocalDate;
@@ -34,11 +35,22 @@ public class AbsenceRepositoryAdapter implements AbsenceRepository {
   @Transactional
   public Absence save(Absence absence) {
     var entity = AbsenceEntity.fromDomain(absence);
+    // absences.current_version_id référence absence_versions, qui référence absences :
+    // la version courante n'est renseignée qu'après l'enregistrement des versions.
+    entity.setCurrentVersionId(null);
     var savedEntity = absenceJpaRepository.save(entity);
-    absence
-        .getVersions()
-        .forEach(v -> versionJpaRepository.save(AbsenceVersionEntity.fromDomain(v, savedEntity)));
+    absence.getVersions().forEach(v -> saveVersion(savedEntity, v));
+    savedEntity.setCurrentVersionId(absence.getCurrentVersionId());
     return savedEntity.toDomain();
+  }
+
+  private void saveVersion(AbsenceEntity absenceEntity, VersionAbsence version) {
+    var savedVersion =
+        versionJpaRepository.save(AbsenceVersionEntity.fromDomain(version, absenceEntity));
+    // Garde la collection de l'entité gérée cohérente pour les lectures dans la même transaction
+    if (!absenceEntity.getVersions().contains(savedVersion)) {
+      absenceEntity.getVersions().add(savedVersion);
+    }
   }
 
   @Override

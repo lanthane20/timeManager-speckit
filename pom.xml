@@ -34,6 +34,8 @@
         <!-- Test frameworks -->
         <jgiven.version>2.0.2</jgiven.version>
         <allure.version>2.29.1</allure.version>
+        <!-- 1.21.2 (imposée par Spring Boot 3.5.3) utilise l'API Docker 1.32, refusée par Docker 29+ -->
+        <testcontainers.version>1.21.4</testcontainers.version>
 
         <!-- Infrastructure -->
         <springdoc.version>2.8.6</springdoc.version>

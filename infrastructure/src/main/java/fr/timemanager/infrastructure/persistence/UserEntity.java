@@ -21,7 +21,9 @@ import java.util.UUID;
 @Table(name = "users")
 public class UserEntity {
 
-  @Id private String id;
+  @Id
+  @Column(columnDefinition = "CHAR(36)")
+  private String id;
 
   @Column(name = "google_sub", nullable = false, unique = true)
   private String googleSub;
@@ -45,7 +47,9 @@ public class UserEntity {
   private boolean recurrenceEnabled;
 
   @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+  @CollectionTable(
+      name = "user_roles",
+      joinColumns = @JoinColumn(name = "user_id", columnDefinition = "CHAR(36)"))
   @Column(name = "role")
   @Enumerated(EnumType.STRING)
   private Set<UserRole> roles = new HashSet<>();

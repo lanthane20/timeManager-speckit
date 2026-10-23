@@ -14,22 +14,24 @@ import java.util.UUID;
 @Table(name = "teams")
 public class TeamEntity {
 
-  @Id private String id;
+  @Id
+  @Column(columnDefinition = "CHAR(36)")
+  private String id;
 
   @Column(nullable = false)
   private String name;
 
-  @Column(name = "parent_team_id")
+  @Column(name = "parent_team_id", columnDefinition = "CHAR(36)")
   private String parentTeamId;
 
   @Column(name = "validation_mode", nullable = false)
   @Enumerated(EnumType.STRING)
   private ValidationMode validationMode;
 
-  @Column(name = "n1_manager_id", nullable = false)
+  @Column(name = "n1_manager_id", nullable = false, columnDefinition = "CHAR(36)")
   private String n1ManagerId;
 
-  @Column(name = "n2_manager_id")
+  @Column(name = "n2_manager_id", columnDefinition = "CHAR(36)")
   private String n2ManagerId;
 
   @Column(nullable = false)

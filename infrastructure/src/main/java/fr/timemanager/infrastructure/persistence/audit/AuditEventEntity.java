@@ -15,12 +15,14 @@ import java.util.UUID;
 @Table(name = "audit_events")
 public class AuditEventEntity {
 
-  @Id private String id;
+  @Id
+  @Column(columnDefinition = "CHAR(36)")
+  private String id;
 
-  @Column(name = "absence_id")
+  @Column(name = "absence_id", columnDefinition = "CHAR(36)")
   private String absenceId;
 
-  @Column(name = "absence_version_id")
+  @Column(name = "absence_version_id", columnDefinition = "CHAR(36)")
   private String absenceVersionId;
 
   @Column(name = "action_type", nullable = false)
@@ -39,7 +41,7 @@ public class AuditEventEntity {
   @Column(name = "value_after", columnDefinition = "TEXT")
   private String valueAfter;
 
-  @Column(name = "correlation_id", nullable = false)
+  @Column(name = "correlation_id", nullable = false, columnDefinition = "CHAR(36)")
   private String correlationId;
 
   @Column(name = "occurred_at", nullable = false)

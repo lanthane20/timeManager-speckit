@@ -16,7 +16,7 @@ import java.util.UUID;
 public class PeriodClosureEntity {
 
   @Id
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String id;
 
   @Column(name = "year", nullable = false)
@@ -28,7 +28,7 @@ public class PeriodClosureEntity {
   @Column(name = "closed_at")
   private Instant closedAt;
 
-  @Column(name = "closed_by_user_id")
+  @Column(name = "closed_by_user_id", columnDefinition = "CHAR(36)")
   private String closedByUserId;
 
   @Enumerated(EnumType.STRING)

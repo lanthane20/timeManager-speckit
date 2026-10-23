@@ -75,10 +75,11 @@ class AbsenceRepositoryIT {
         employeeId + "@timemanager.fr");
     jdbcTemplate.update(
         """
-        INSERT INTO teams (id, name, validation_mode, active)
-        VALUES (?, 'Equipe Test', 'N1', true)
+        INSERT INTO teams (id, name, validation_mode, n1_manager_id, active)
+        VALUES (?, 'Equipe Test', 'N1', ?, true)
         """,
-        teamId.toString());
+        teamId.toString(),
+        employeeId.toString());
     if (absenceTypeRepository.findById(TYPE_ECOLE.toString()).isEmpty()) {
       jdbcTemplate.update(
           """

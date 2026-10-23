@@ -17,10 +17,10 @@ import java.util.UUID;
 public class RecurrenceInjectionLogEntity {
 
   @Id
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String id;
 
-  @Column(name = "pattern_id", nullable = false, updatable = false)
+  @Column(name = "pattern_id", nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String patternId;
 
   @Enumerated(EnumType.STRING)
@@ -30,7 +30,11 @@ public class RecurrenceInjectionLogEntity {
   @Column(name = "injected_at", nullable = false, updatable = false)
   private Instant injectedAt;
 
-  @Column(name = "injected_by_user_id", nullable = false, updatable = false)
+  @Column(
+      name = "injected_by_user_id",
+      nullable = false,
+      updatable = false,
+      columnDefinition = "CHAR(36)")
   private String injectedByUserId;
 
   @Column(name = "events_created_count", nullable = false, updatable = false)
