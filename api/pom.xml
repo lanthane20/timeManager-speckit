@@ -39,6 +39,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Actuator : /actuator/health, déjà configuré et autorisé dans SecurityConfig -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Sécurité OAuth2 Resource Server -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

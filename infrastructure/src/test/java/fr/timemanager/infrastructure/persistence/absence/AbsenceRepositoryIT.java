@@ -10,6 +10,7 @@ import fr.timemanager.domain.shared.DateRange;
 import fr.timemanager.domain.shared.HalfDayType;
 import fr.timemanager.infrastructure.persistence.AbsenceTypeEntity;
 import fr.timemanager.infrastructure.persistence.AbsenceTypeRepository;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -56,6 +57,7 @@ class AbsenceRepositoryIT {
   @Autowired private AbsenceRepositoryAdapter repository;
   @Autowired private AbsenceTypeRepository absenceTypeRepository;
   @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired private EntityManager entityManager;
 
   private UUID employeeId;
   private UUID teamId;
@@ -160,6 +162,36 @@ class AbsenceRepositoryIT {
             employeeId, LocalDate.of(2026, 8, 10), LocalDate.of(2026, 8, 12));
 
     assertThat(overlaps).isEmpty();
+  }
+
+  @Test
+  void save_successifsDansDesTransactionsDistinctes_neDeclenchentPasDeConflitDeVersion() {
+    Absence absence = newAbsence(TYPE_CP, LocalDate.of(2026, 9, 7), LocalDate.of(2026, 9, 8));
+    repository.save(absence);
+    startNewPersistenceContext();
+
+    // Validation manager : l'absence est rechargée puis réenregistrée, comme dans ValidateAbsence.
+    Absence toValidate = repository.findById(absence.getId()).orElseThrow();
+    toValidate.getActiveVersion().validate();
+    toValidate.updateSimplifiedStatus();
+    repository.save(toValidate);
+    startNewPersistenceContext();
+
+    // Deuxième mutation sur la même absence : annulation manager.
+    Absence toCancel = repository.findById(absence.getId()).orElseThrow();
+    toCancel.getActiveVersion().cancelByManager("Réorganisation du planning");
+    toCancel.updateSimplifiedStatus();
+    repository.save(toCancel);
+    startNewPersistenceContext();
+
+    assertThat(repository.findById(absence.getId()).orElseThrow().getSimplifiedStatus())
+        .isEqualTo(AbsenceSimplifiedStatus.ANNULEE);
+  }
+
+  /** Simule une nouvelle requête HTTP : les entités ne sont plus en cache. */
+  private void startNewPersistenceContext() {
+    entityManager.flush();
+    entityManager.clear();
   }
 
   @Test

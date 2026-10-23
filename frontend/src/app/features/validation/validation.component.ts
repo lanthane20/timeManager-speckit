@@ -155,6 +155,8 @@ import { Absence } from '../my-absences/models/absence.model';
     `
       .page {
         display: grid;
+        /* minmax(0, 1fr) : un tableau large défile dans sa carte au lieu d'élargir la page. */
+        grid-template-columns: minmax(0, 1fr);
         gap: 1.25rem;
       }
       .page-header {

@@ -10,8 +10,16 @@ export class AuthService {
 
   currentUser = signal<User | null>(null);
 
+  // oidc-client-ts relit la session de façon asynchrone : les guards doivent l'attendre, sinon
+  // chaque chargement de page renverrait un utilisateur connecté vers la page de connexion.
+  private readonly sessionRestored: Promise<void>;
+
   constructor() {
-    this.userManager.getUser().then(user => this.currentUser.set(user));
+    this.sessionRestored = this.userManager.getUser().then(user => this.currentUser.set(user));
+  }
+
+  whenSessionRestored(): Promise<void> {
+    return this.sessionRestored;
   }
 
   login(): Promise<void> {

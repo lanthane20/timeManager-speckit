@@ -157,9 +157,31 @@ npm run e2e:install   # une seule fois : télécharge les navigateurs Playwright
 npm run e2e           # Playwright (end-to-end)
 ```
 
-> Les scénarios end-to-end sont ignorés tant que les jetons de démonstration
-> (`E2E_TOKEN_SALARIE`, `E2E_TOKEN_MANAGER`, `E2E_TOKEN_RH`) ne sont pas fournis dans
-> l'environnement — voir `frontend/e2e/fixtures/auth.ts`.
+Les scénarios end-to-end s'exécutent contre l'application complète (MariaDB, backend, frontend).
+Les tests signent eux-mêmes les jetons d'accès des comptes de démonstration avec une clé de test :
+aucun compte Google ni secret n'est nécessaire. Sans la variable `E2E_JWT_PRIVATE_KEY`, ils sont
+ignorés. La CI (job `e2e`) déroule les mêmes étapes :
+
+```bash
+# 1. Paire de clés jetable
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/e2e-private.pem
+openssl rsa -in /tmp/e2e-private.pem -pubout -out /tmp/e2e-public.pem
+
+# 2. Backend validant les jetons avec la clé publique de test (base MariaDB dédiée, vide)
+SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI= \
+SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLIC_KEY_LOCATION=file:/tmp/e2e-public.pem \
+NOTIFICATION_ENABLED=false MANAGEMENT_HEALTH_MAIL_ENABLED=false \
+java -jar api/target/api-1.0.0-SNAPSHOT.jar
+
+# 3. Comptes de démonstration (après le démarrage, qui applique les migrations)
+mariadb -utimemanager -p timemanager < frontend/e2e/fixtures/seed.sql
+
+# 4. Tests (Playwright démarre lui-même `npm start` hors CI)
+cd frontend && E2E_JWT_PRIVATE_KEY=/tmp/e2e-private.pem npm run e2e
+```
+
+> Les projets bureau et mobile s'exécutent sur la même base, chacun sur son propre mois : repartir
+> d'une base vide avant chaque exécution complète.
 
 ---
 

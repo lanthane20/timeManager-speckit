@@ -27,9 +27,18 @@ export class MyAbsencesPage {
     await this.newRequestButton.click();
     await this.absenceTypeSelect.click();
     await this.page.getByRole('option', { name: absenceTypeLabel }).click();
-    await this.startDate.fill(start);
-    await this.endDate.fill(end);
+    await this.typeDate(this.startDate, start);
+    await this.typeDate(this.endDate, end);
     await this.submitButton.click();
+  }
+
+  /**
+   * Le datepicker PrimeNG n'interprète que la saisie clavier : `fill()` remplit le champ sans mettre
+   * à jour le formulaire, qui l'efface à la perte du focus.
+   */
+  private async typeDate(field: Locator, date: string): Promise<void> {
+    await field.pressSequentially(date);
+    await field.press('Escape');
   }
 
   rowFor(start: string): Locator {
