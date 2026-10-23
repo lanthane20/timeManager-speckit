@@ -25,11 +25,13 @@ jobs:
       - name: Lint — Checkstyle + Google Java Format
         run: ./mvnw spotless:check checkstyle:check --no-transfer-progress
 
+      # install publie les modules dans le dépôt local : les étapes suivantes
+      # (-pl sans -am) en dépendent sur un runner vierge.
       - name: Tests unitaires
-        run: ./mvnw test -pl domain,application --no-transfer-progress
+        run: ./mvnw install -pl .,domain,application --no-transfer-progress
 
       - name: Tests d'intégration (Testcontainers + MariaDB)
-        run: ./mvnw verify -pl infrastructure --no-transfer-progress
+        run: ./mvnw install -pl infrastructure --no-transfer-progress
 
       - name: Tests contrôleurs (MockMvc)
         run: ./mvnw test -pl api --no-transfer-progress
@@ -48,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: target/allure-maven-plugin/
+          path: target/site/allure-maven-plugin/
 
   frontend:
     name: Frontend — Node.js / Angular

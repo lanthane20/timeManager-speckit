@@ -13,13 +13,17 @@ import java.util.UUID;
 public class RecurrencePatternEntity {
 
   @Id
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String id;
 
-  @Column(name = "employee_id", nullable = false, updatable = false)
+  @Column(name = "employee_id", nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String employeeId;
 
-  @Column(name = "absence_type_id", nullable = false, updatable = false)
+  @Column(
+      name = "absence_type_id",
+      nullable = false,
+      updatable = false,
+      columnDefinition = "CHAR(36)")
   private String absenceTypeId;
 
   @Column(name = "description", columnDefinition = "TEXT")

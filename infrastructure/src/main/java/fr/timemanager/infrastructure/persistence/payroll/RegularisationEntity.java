@@ -13,16 +13,24 @@ import java.util.UUID;
 public class RegularisationEntity {
 
   @Id
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String id;
 
-  @Column(name = "period_closure_id", nullable = false, updatable = false)
+  @Column(
+      name = "period_closure_id",
+      nullable = false,
+      updatable = false,
+      columnDefinition = "CHAR(36)")
   private String periodClosureId;
 
-  @Column(name = "absence_version_id", nullable = false, updatable = false)
+  @Column(
+      name = "absence_version_id",
+      nullable = false,
+      updatable = false,
+      columnDefinition = "CHAR(36)")
   private String absenceVersionId;
 
-  @Column(name = "employee_id", nullable = false, updatable = false)
+  @Column(name = "employee_id", nullable = false, updatable = false, columnDefinition = "CHAR(36)")
   private String employeeId;
 
   @Column(name = "detected_at", nullable = false, updatable = false)
