@@ -16,6 +16,13 @@ export interface PlanningEntry {
   status: AbsenceSimplifiedStatus;
 }
 
+/** Équipe ou sous-équipe proposée dans le filtre du planning (EF-017). */
+export interface PlanningTeam {
+  id: string;
+  name: string;
+  parentTeamId: string | null;
+}
+
 /** T083 — Planning mensuel de l'équipe (EF-015 à EF-017). */
 @Injectable({ providedIn: 'root' })
 export class PlanningService {
@@ -34,5 +41,10 @@ export class PlanningService {
       params['teamId'] = teamId;
     }
     return this.api.get<PlanningEntry[]>('/v1/planning', params);
+  }
+
+  /** EF-017 : équipes du périmètre de l'utilisateur, sous-équipes comprises. */
+  getTeams(): Observable<PlanningTeam[]> {
+    return this.api.get<PlanningTeam[]>('/v1/planning/teams');
   }
 }

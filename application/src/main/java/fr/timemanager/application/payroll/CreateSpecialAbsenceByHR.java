@@ -4,6 +4,7 @@ import fr.timemanager.application.absence.AbsenceRepository;
 import fr.timemanager.application.absence.AbsenceTypeRepository;
 import fr.timemanager.application.absence.PublicHolidayRepository;
 import fr.timemanager.application.absence.TeamRepository;
+import fr.timemanager.application.absence.WorkScheduleRepository;
 import fr.timemanager.application.audit.AuditRepository;
 import fr.timemanager.application.authorization.AuthorizationService;
 import fr.timemanager.application.dto.absence.AbsenceResponseDto;
@@ -40,6 +41,7 @@ public class CreateSpecialAbsenceByHR {
   private final TeamRepository teamRepository;
   private final AuditRepository auditRepository;
   private final AuthorizationService authorizationService;
+  private final WorkScheduleRepository workScheduleRepository;
   private final WorkingDaysCalculator workingDaysCalculator = new WorkingDaysCalculator();
 
   public CreateSpecialAbsenceByHR(
@@ -48,13 +50,15 @@ public class CreateSpecialAbsenceByHR {
       PublicHolidayRepository publicHolidayRepository,
       TeamRepository teamRepository,
       AuditRepository auditRepository,
-      AuthorizationService authorizationService) {
+      AuthorizationService authorizationService,
+      WorkScheduleRepository workScheduleRepository) {
     this.absenceRepository = absenceRepository;
     this.absenceTypeRepository = absenceTypeRepository;
     this.publicHolidayRepository = publicHolidayRepository;
     this.teamRepository = teamRepository;
     this.auditRepository = auditRepository;
     this.authorizationService = authorizationService;
+    this.workScheduleRepository = workScheduleRepository;
   }
 
   public AbsenceResponseDto execute(
@@ -73,7 +77,7 @@ public class CreateSpecialAbsenceByHR {
 
     Instant now = Instant.now();
     UUID absenceId = UUID.randomUUID();
-    VersionAbsence version = buildVersion(absenceId, hrUser, request, now);
+    VersionAbsence version = buildVersion(absenceId, employeeId, hrUser, request, now);
     Absence absence =
         new Absence(
             absenceId, employeeId, type.getId(), teamId, AbsenceSimplifiedStatus.VALIDEE, now);
@@ -103,7 +107,7 @@ public class CreateSpecialAbsenceByHR {
   }
 
   private VersionAbsence buildVersion(
-      UUID absenceId, User hrUser, CreateAbsenceRequestDto request, Instant now) {
+      UUID absenceId, UUID employeeId, User hrUser, CreateAbsenceRequestDto request, Instant now) {
     var dateRange = new DateRange(request.startDate(), request.endDate());
     HalfDay halfDay =
         new HalfDay(
@@ -112,7 +116,8 @@ public class CreateSpecialAbsenceByHR {
     List<LocalDate> holidays =
         publicHolidayRepository.findBetween(request.startDate(), request.endDate());
     BigDecimal workingDays =
-        workingDaysCalculator.calculate(dateRange, halfDay, holidays, List.of());
+        workingDaysCalculator.calculateWithSchedules(
+            dateRange, halfDay, holidays, workScheduleRepository.findByUserId(employeeId));
 
     return new VersionAbsence(
         UUID.randomUUID(),

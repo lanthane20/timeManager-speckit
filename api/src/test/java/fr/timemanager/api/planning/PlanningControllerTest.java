@@ -14,6 +14,8 @@ import fr.timemanager.application.authorization.UnauthorizedException;
 import fr.timemanager.application.dto.planning.PlanningEntryDto;
 import fr.timemanager.application.planning.GetMonthlyPlanning;
 import fr.timemanager.domain.absence.AbsenceSimplifiedStatus;
+import fr.timemanager.domain.team.Team;
+import fr.timemanager.domain.team.ValidationMode;
 import fr.timemanager.domain.user.User;
 import fr.timemanager.domain.user.UserRole;
 import fr.timemanager.infrastructure.security.CurrentUserProvider;
@@ -124,6 +126,33 @@ class PlanningControllerTest {
   void planning_sansRoleManagerNiRh_retourne403() throws Exception {
     mockMvc
         .perform(get("/api/v1/planning").with(jwt().authorities(ROLE_SALARIE)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void teams_retourneLesEquipesDuPerimetreAvecLeurParent() throws Exception {
+    UUID subTeamId = UUID.randomUUID();
+    given(getMonthlyPlanning.visibleTeams(manager))
+        .willReturn(
+            List.of(
+                new Team(teamId, "Production", null, ValidationMode.N1_ONLY, managerId, null, true),
+                new Team(
+                    subTeamId, "Atelier", teamId, ValidationMode.N1_ONLY, managerId, null, true)));
+
+    mockMvc
+        .perform(get("/api/v1/planning/teams").with(jwt().authorities(ROLE_MANAGER)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].name").value("Production"))
+        .andExpect(jsonPath("$[0].parentTeamId").doesNotExist())
+        .andExpect(jsonPath("$[1].id").value(subTeamId.toString()))
+        .andExpect(jsonPath("$[1].parentTeamId").value(teamId.toString()))
+        .andExpect(jsonPath("$[1].n1ManagerId").doesNotExist());
+  }
+
+  @Test
+  void teams_sansRoleManagerNiRh_retourne403() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/planning/teams").with(jwt().authorities(ROLE_SALARIE)))
         .andExpect(status().isForbidden());
   }
 

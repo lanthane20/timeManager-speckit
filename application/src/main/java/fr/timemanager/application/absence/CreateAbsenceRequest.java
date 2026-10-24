@@ -34,6 +34,7 @@ public class CreateAbsenceRequest {
   private final WorkingDaysCalculator workingDaysCalculator;
   private final AbsenceOverlapChecker overlapChecker;
   private final TeamRepository teamRepository;
+  private final WorkScheduleRepository workScheduleRepository;
 
   public CreateAbsenceRequest(
       AbsenceRepository absenceRepository,
@@ -41,13 +42,15 @@ public class CreateAbsenceRequest {
       PublicHolidayRepository publicHolidayRepository,
       AuditRepository auditRepository,
       NotificationService notificationService,
-      TeamRepository teamRepository) {
+      TeamRepository teamRepository,
+      WorkScheduleRepository workScheduleRepository) {
     this.absenceRepository = absenceRepository;
     this.absenceTypeRepository = absenceTypeRepository;
     this.publicHolidayRepository = publicHolidayRepository;
     this.auditRepository = auditRepository;
     this.notificationService = notificationService;
     this.teamRepository = teamRepository;
+    this.workScheduleRepository = workScheduleRepository;
     this.workingDaysCalculator = new WorkingDaysCalculator();
     this.overlapChecker = new AbsenceOverlapChecker();
   }
@@ -62,7 +65,7 @@ public class CreateAbsenceRequest {
         absenceRepository.findOverlappingInfo(employeeId, request.startDate(), request.endDate());
     overlapChecker.assertNoConflict(dateRange, existing);
 
-    BigDecimal workingDays = computeWorkingDays(dateRange, request);
+    BigDecimal workingDays = computeWorkingDays(employeeId, dateRange, request);
 
     UUID absenceId = UUID.randomUUID();
     UUID versionId = UUID.randomUUID();
@@ -122,15 +125,20 @@ public class CreateAbsenceRequest {
     return type;
   }
 
-  /** EF-003, EF-004 : jours ouvrés déduits des week-ends, jours fériés et demi-journées. */
-  private BigDecimal computeWorkingDays(DateRange dateRange, CreateAbsenceRequestDto request) {
+  /**
+   * EF-003, EF-004, EF-031b : jours ouvrés déduits des week-ends, jours fériés, demi-journées et
+   * jours non travaillés du planning contractuel du salarié.
+   */
+  private BigDecimal computeWorkingDays(
+      UUID employeeId, DateRange dateRange, CreateAbsenceRequestDto request) {
     List<java.time.LocalDate> holidays =
         publicHolidayRepository.findBetween(request.startDate(), request.endDate());
     HalfDay halfDay =
         new HalfDay(
             request.halfDayStart() != null ? request.halfDayStart() : HalfDayType.NONE,
             request.halfDayEnd() != null ? request.halfDayEnd() : HalfDayType.NONE);
-    return workingDaysCalculator.calculate(dateRange, halfDay, holidays, List.of());
+    return workingDaysCalculator.calculateWithSchedules(
+        dateRange, halfDay, holidays, workScheduleRepository.findByUserId(employeeId));
   }
 
   /** Constitution Principe V : toute mutation métier émet un événement d'audit persisté. */

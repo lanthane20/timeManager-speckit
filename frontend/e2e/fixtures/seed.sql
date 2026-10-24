@@ -19,5 +19,9 @@ VALUES
 INSERT INTO teams (id, name, validation_mode, n1_manager_id, active)
 VALUES ('e2e00000-0000-0000-0000-0000000000a1', 'Équipe E2E', 'N1_ONLY', 'e2e00000-0000-0000-0000-000000000002', true);
 
+-- Sous-équipe (EF-017) : le filtre du planning doit la proposer sous son équipe parente.
+INSERT INTO teams (id, name, parent_team_id, validation_mode, n1_manager_id, active)
+VALUES ('e2e00000-0000-0000-0000-0000000000a2', 'Support E2E', 'e2e00000-0000-0000-0000-0000000000a1', 'N1_ONLY', 'e2e00000-0000-0000-0000-000000000002', true);
+
 INSERT INTO team_members (team_id, user_id)
 VALUES ('e2e00000-0000-0000-0000-0000000000a1', 'e2e00000-0000-0000-0000-000000000001');

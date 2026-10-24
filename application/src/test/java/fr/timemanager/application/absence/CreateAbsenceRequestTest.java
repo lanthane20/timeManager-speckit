@@ -18,7 +18,10 @@ import fr.timemanager.domain.absence.ExistingAbsenceInfo;
 import fr.timemanager.domain.absencetype.AbsenceType;
 import fr.timemanager.domain.shared.DateRange;
 import fr.timemanager.domain.user.UserRole;
+import fr.timemanager.domain.user.WorkSchedule;
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +63,23 @@ class CreateAbsenceRequestTest
     when().le_salarie_cree_une_demande_du(LocalDate.of(2026, 7, 13), LocalDate.of(2026, 7, 20));
 
     then().le_nombre_de_jours_ouvres_calcule_est(new BigDecimal("5.0"));
+  }
+
+  @Test
+  void ef031b_salarieAMiTemps_leJourNonTravailleContractuelNestPasDecompte() {
+    given()
+        .un_type_d_absence_valide("Congés payés", false)
+        .and()
+        .aucune_absence_existante_sur_la_periode()
+        .and()
+        .aucun_jour_ferie_sur_la_periode()
+        .and()
+        .un_planning_contractuel_sans_le_mercredi_depuis(LocalDate.of(2026, 1, 1));
+
+    // Du lundi 22 au vendredi 26 juin 2026 : 5 jours ouvrés, dont le mercredi non travaillé.
+    when().le_salarie_cree_une_demande_du(LocalDate.of(2026, 6, 22), LocalDate.of(2026, 6, 26));
+
+    then().le_nombre_de_jours_ouvres_calcule_est(new BigDecimal("4.0"));
   }
 
   @Test
@@ -105,6 +125,8 @@ class CreateAbsenceRequestTest
     private final AuditRepository auditRepository = mock(AuditRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
     private final TeamRepository teamRepository = mock(TeamRepository.class);
+    private final WorkScheduleRepository workScheduleRepository =
+        mock(WorkScheduleRepository.class);
 
     private final UUID employeeId = UUID.randomUUID();
     private final UUID teamId = UUID.randomUUID();
@@ -159,6 +181,17 @@ class CreateAbsenceRequestTest
       return self();
     }
 
+    public CreateAbsenceStage un_planning_contractuel_sans_le_mercredi_depuis(LocalDate from) {
+      var workingDays =
+          Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+      Mockito.when(workScheduleRepository.findByUserId(employeeId))
+          .thenReturn(
+              List.of(
+                  new WorkSchedule(
+                      UUID.randomUUID(), employeeId, workingDays, from, null, Instant.now())));
+      return self();
+    }
+
     public CreateAbsenceStage le_salarie_cree_une_demande_du(LocalDate start, LocalDate end) {
       result = execute(start, end);
       return self();
@@ -208,7 +241,8 @@ class CreateAbsenceRequestTest
               publicHolidayRepository,
               auditRepository,
               notificationService,
-              teamRepository);
+              teamRepository,
+              workScheduleRepository);
       CreateAbsenceRequestDto dto =
           new CreateAbsenceRequestDto(absenceTypeId, start, end, null, null, null);
       return useCase.execute(employeeId, teamId, UUID.randomUUID().toString(), dto);

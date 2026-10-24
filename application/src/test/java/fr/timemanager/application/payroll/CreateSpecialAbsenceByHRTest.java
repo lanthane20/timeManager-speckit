@@ -11,6 +11,7 @@ import fr.timemanager.application.absence.AbsenceRepository;
 import fr.timemanager.application.absence.AbsenceTypeRepository;
 import fr.timemanager.application.absence.PublicHolidayRepository;
 import fr.timemanager.application.absence.TeamRepository;
+import fr.timemanager.application.absence.WorkScheduleRepository;
 import fr.timemanager.application.audit.AuditRepository;
 import fr.timemanager.application.authorization.AuthorizationService;
 import fr.timemanager.application.authorization.UnauthorizedException;
@@ -130,7 +131,8 @@ class CreateSpecialAbsenceByHRTest
               publicHolidayRepository,
               teamRepository,
               auditRepository,
-              authorizationService);
+              authorizationService,
+              mock(WorkScheduleRepository.class));
       var request =
           new CreateAbsenceRequestDto(
               absenceTypeId,

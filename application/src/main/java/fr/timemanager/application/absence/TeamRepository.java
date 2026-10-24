@@ -13,6 +13,9 @@ public interface TeamRepository {
 
   List<Team> findTeamsByManagerId(UUID managerId);
 
+  /** Équipes et sous-équipes actives, pour le périmètre du planning (EF-017). */
+  List<Team> findAllActive();
+
   Set<UUID> findMemberIdsByTeamId(UUID teamId);
 
   Optional<UUID> findTeamIdByMemberId(UUID employeeId);

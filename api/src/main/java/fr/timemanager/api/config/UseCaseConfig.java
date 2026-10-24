@@ -14,6 +14,7 @@ import fr.timemanager.application.absence.RequestAbsenceModification;
 import fr.timemanager.application.absence.TeamRepository;
 import fr.timemanager.application.absence.ValidateAbsence;
 import fr.timemanager.application.absence.ValidateAbsenceN2;
+import fr.timemanager.application.absence.WorkScheduleRepository;
 import fr.timemanager.application.admin.AdminRepository;
 import fr.timemanager.application.admin.ManageAbsenceTypes;
 import fr.timemanager.application.admin.ManageTeams;
@@ -60,14 +61,16 @@ public class UseCaseConfig {
       PublicHolidayRepository publicHolidayRepository,
       AuditRepository auditRepository,
       NotificationService notificationService,
-      TeamRepository teamRepository) {
+      TeamRepository teamRepository,
+      WorkScheduleRepository workScheduleRepository) {
     return new CreateAbsenceRequest(
         absenceRepository,
         absenceTypeRepository,
         publicHolidayRepository,
         auditRepository,
         notificationService,
-        teamRepository);
+        teamRepository,
+        workScheduleRepository);
   }
 
   @Bean
@@ -91,14 +94,16 @@ public class UseCaseConfig {
       PublicHolidayRepository publicHolidayRepository,
       TeamRepository teamRepository,
       AuditRepository auditRepository,
-      NotificationService notificationService) {
+      NotificationService notificationService,
+      WorkScheduleRepository workScheduleRepository) {
     return new RequestAbsenceModification(
         absenceRepository,
         absenceTypeRepository,
         publicHolidayRepository,
         teamRepository,
         auditRepository,
-        notificationService);
+        notificationService,
+        workScheduleRepository);
   }
 
   @Bean
@@ -266,14 +271,16 @@ public class UseCaseConfig {
       PublicHolidayRepository publicHolidayRepository,
       TeamRepository teamRepository,
       AuditRepository auditRepository,
-      AuthorizationService authorizationService) {
+      AuthorizationService authorizationService,
+      WorkScheduleRepository workScheduleRepository) {
     return new CreateSpecialAbsenceByHR(
         absenceRepository,
         absenceTypeRepository,
         publicHolidayRepository,
         teamRepository,
         auditRepository,
-        authorizationService);
+        authorizationService,
+        workScheduleRepository);
   }
 
   @Bean
@@ -282,13 +289,15 @@ public class UseCaseConfig {
       AbsenceTypeRepository absenceTypeRepository,
       PublicHolidayRepository publicHolidayRepository,
       AuditRepository auditRepository,
-      AuthorizationService authorizationService) {
+      AuthorizationService authorizationService,
+      WorkScheduleRepository workScheduleRepository) {
     return new CorrectAbsence(
         absenceRepository,
         absenceTypeRepository,
         publicHolidayRepository,
         auditRepository,
-        authorizationService);
+        authorizationService,
+        workScheduleRepository);
   }
 
   @Bean

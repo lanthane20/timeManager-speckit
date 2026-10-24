@@ -18,6 +18,8 @@ import { AuthService } from '../core/auth/auth.service';
         <a routerLink="/counters" routerLinkActive="active">Mes compteurs</a>
         @if (authService.getUserRoles().includes('MANAGER')) {
           <a routerLink="/validation" routerLinkActive="active">Validation</a>
+        }
+        @if (hasAnyRole('MANAGER', 'RH')) {
           <a routerLink="/planning" routerLinkActive="active">Planning</a>
         }
         @if (authService.getUserRoles().includes('RH')) {
@@ -86,6 +88,10 @@ import { AuthService } from '../core/auth/auth.service';
 })
 export class ShellComponent {
   authService = inject(AuthService);
+
+  hasAnyRole(...roles: string[]): boolean {
+    return roles.some(role => this.authService.getUserRoles().includes(role));
+  }
 
   logout(): void {
     this.authService.logout();

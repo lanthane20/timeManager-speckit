@@ -42,6 +42,19 @@ public class PlanningController {
         currentUserProvider.resolve(authentication.getToken()), parseMonth(month), teamId);
   }
 
+  /** EF-017 : équipes et sous-équipes proposées dans le filtre du planning. */
+  @GetMapping("/teams")
+  @PreAuthorize("hasAnyRole('MANAGER','RH')")
+  public List<PlanningTeamDto> teams(JwtAuthenticationToken authentication) {
+    return getMonthlyPlanning
+        .visibleTeams(currentUserProvider.resolve(authentication.getToken()))
+        .stream()
+        .map(team -> new PlanningTeamDto(team.getId(), team.getName(), team.getParentTeamId()))
+        .toList();
+  }
+
+  public record PlanningTeamDto(UUID id, String name, UUID parentTeamId) {}
+
   private YearMonth parseMonth(String month) {
     if (month == null || month.isBlank()) {
       return null;

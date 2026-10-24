@@ -33,6 +33,7 @@ public class RequestAbsenceModification {
   private final TeamRepository teamRepository;
   private final AuditRepository auditRepository;
   private final NotificationService notificationService;
+  private final WorkScheduleRepository workScheduleRepository;
   private final WorkingDaysCalculator workingDaysCalculator = new WorkingDaysCalculator();
 
   public RequestAbsenceModification(
@@ -41,13 +42,15 @@ public class RequestAbsenceModification {
       PublicHolidayRepository publicHolidayRepository,
       TeamRepository teamRepository,
       AuditRepository auditRepository,
-      NotificationService notificationService) {
+      NotificationService notificationService,
+      WorkScheduleRepository workScheduleRepository) {
     this.absenceRepository = absenceRepository;
     this.absenceTypeRepository = absenceTypeRepository;
     this.publicHolidayRepository = publicHolidayRepository;
     this.teamRepository = teamRepository;
     this.auditRepository = auditRepository;
     this.notificationService = notificationService;
+    this.workScheduleRepository = workScheduleRepository;
   }
 
   public AbsenceResponseDto execute(
@@ -110,7 +113,8 @@ public class RequestAbsenceModification {
     List<LocalDate> holidays =
         publicHolidayRepository.findBetween(request.startDate(), request.endDate());
     BigDecimal workingDays =
-        workingDaysCalculator.calculate(dateRange, halfDay, holidays, List.of());
+        workingDaysCalculator.calculateWithSchedules(
+            dateRange, halfDay, holidays, workScheduleRepository.findByUserId(employeeId));
 
     return new VersionAbsence(
         UUID.randomUUID(),

@@ -109,7 +109,8 @@ class CreateAbsenceForEmployeeTest
               publicHolidayRepository,
               auditRepository,
               notificationService,
-              teamRepository);
+              teamRepository,
+              mock(WorkScheduleRepository.class));
       var useCase =
           new CreateAbsenceForEmployee(createAbsenceRequest, teamRepository, authorizationService);
       var request =

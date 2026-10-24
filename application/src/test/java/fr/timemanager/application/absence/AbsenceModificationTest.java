@@ -253,7 +253,8 @@ class AbsenceModificationTest
               publicHolidayRepository,
               teamRepository,
               auditRepository,
-              notificationService);
+              notificationService,
+              mock(WorkScheduleRepository.class));
       var request =
           new CreateAbsenceRequestDto(
               absence.getAbsenceTypeId(), start, end, HalfDayType.NONE, HalfDayType.NONE, null);

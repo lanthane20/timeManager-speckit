@@ -36,6 +36,15 @@ public class TeamRepositoryAdapter implements fr.timemanager.application.absence
   }
 
   @Override
+  public List<Team> findAllActive() {
+    return jpaRepository.findAll().stream()
+        .map(TeamEntity::toDomain)
+        .filter(Team::isActive)
+        .sorted(java.util.Comparator.comparing(Team::getName))
+        .toList();
+  }
+
+  @Override
   public Set<UUID> findMemberIdsByTeamId(UUID teamId) {
     return jpaRepository.findMemberUserIds(teamId.toString()).stream()
         .map(UUID::fromString)

@@ -1,10 +1,13 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import { PlanningEntry, PlanningService } from './services/planning.service';
+import { PlanningEntry, PlanningService, PlanningTeam } from './services/planning.service';
+import { toTeamOptions } from './team-options';
 
 interface EmployeeRow {
   employeeId: string;
@@ -34,7 +37,15 @@ const MONTH_LABELS = [
 @Component({
   selector: 'app-planning',
   standalone: true,
-  imports: [CommonModule, ButtonModule, MessageModule, ProgressSpinnerModule, TableModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    MessageModule,
+    ProgressSpinnerModule,
+    SelectModule,
+    TableModule,
+  ],
   template: `
     <section class="page">
       <header class="page-header">
@@ -54,6 +65,21 @@ const MONTH_LABELS = [
             (onClick)="shiftMonth(1)"
           />
         </div>
+        @if (teamOptions().length > 1) {
+          <div class="team-filter">
+            <label for="teamFilter">Équipe</label>
+            <p-select
+              inputId="teamFilter"
+              [options]="teamOptions()"
+              optionLabel="label"
+              optionValue="id"
+              placeholder="Tout mon périmètre"
+              [showClear]="true"
+              [ngModel]="selectedTeamId()"
+              (ngModelChange)="selectTeam($event)"
+            />
+          </div>
+        }
         @if (loading()) {
           <p-progressSpinner styleClass="header-spinner" strokeWidth="4" ariaLabel="Chargement" />
         }
@@ -129,6 +155,11 @@ const MONTH_LABELS = [
       h1 {
         font-size: 1.4rem;
         margin: 0;
+      }
+      .team-filter {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
       .month-nav {
         display: flex;
@@ -210,6 +241,10 @@ export class PlanningComponent implements OnInit {
   readonly entries = signal<PlanningEntry[]>([]);
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  /** EF-017 : équipes du périmètre ; aucune sélection = tout le périmètre. */
+  readonly teams = signal<PlanningTeam[]>([]);
+  readonly teamOptions = computed(() => toTeamOptions(this.teams()));
+  readonly selectedTeamId = signal<string | null>(null);
   /** EF-016 : le mois courant est affiché par défaut. */
   readonly month = signal(startOfCurrentMonth());
 
@@ -250,6 +285,16 @@ export class PlanningComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.planningService.getTeams().subscribe({
+      next: teams => this.teams.set(teams),
+      // Sans la liste, le filtre reste masqué : le planning couvre tout le périmètre.
+      error: () => this.teams.set([]),
+    });
+    this.load();
+  }
+
+  selectTeam(teamId: string | null): void {
+    this.selectedTeamId.set(teamId);
     this.load();
   }
 
@@ -303,7 +348,8 @@ export class PlanningComponent implements OnInit {
     this.errorMessage.set(null);
     const date = this.month();
     const monthParam = `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
-    this.planningService.getMonthlyPlanning(monthParam).subscribe({
+    const teamId = this.selectedTeamId() ?? undefined;
+    this.planningService.getMonthlyPlanning(monthParam, teamId).subscribe({
       next: entries => {
         this.entries.set(entries);
         this.loading.set(false);

@@ -16,6 +16,7 @@ import fr.timemanager.domain.user.User;
 import fr.timemanager.domain.user.UserRole;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,21 +76,49 @@ public class GetMonthlyPlanning {
     return absences.stream().map(absence -> toEntry(absence, employeeNames)).toList();
   }
 
-  private List<UUID> resolveTeamIds(User viewer, UUID teamIdFilter) {
-    List<UUID> managedTeamIds =
+  /**
+   * EF-017 : équipes dont l'utilisateur peut consulter le planning — toutes les équipes actives
+   * pour la RH, sinon les équipes qu'il manage (N+1 ou N+2) et toutes leurs sous-équipes.
+   */
+  public List<Team> visibleTeams(User viewer) {
+    authorizationService.assertAdminHasNoAbsenceDataAccess(viewer);
+    List<Team> activeTeams = teamRepository.findAllActive();
+    if (viewer.hasRole(UserRole.RH)) {
+      return activeTeams;
+    }
+    Set<UUID> managedTeamIds =
         teamRepository.findTeamsByManagerId(viewer.getId()).stream()
             .map(Team::getId)
-            .distinct()
-            .toList();
+            .collect(Collectors.toSet());
+    return withSubTeams(activeTeams, managedTeamIds);
+  }
 
+  /** Sans filtre, tout le périmètre ; avec un filtre, l'équipe choisie et ses sous-équipes. */
+  private List<UUID> resolveTeamIds(User viewer, UUID teamIdFilter) {
+    List<Team> visibleTeams = visibleTeams(viewer);
     if (teamIdFilter == null) {
-      return managedTeamIds;
+      return visibleTeams.stream().map(Team::getId).toList();
     }
-    if (!viewer.hasRole(UserRole.RH) && !managedTeamIds.contains(teamIdFilter)) {
+    if (visibleTeams.stream().noneMatch(team -> team.getId().equals(teamIdFilter))) {
       throw new UnauthorizedException(
           viewer.getId() + " n'a pas accès au planning de l'équipe " + teamIdFilter);
     }
-    return List.of(teamIdFilter);
+    return withSubTeams(visibleTeams, Set.of(teamIdFilter)).stream().map(Team::getId).toList();
+  }
+
+  /** Équipes racines et leurs descendantes, dans l'ordre de {@code teams}. */
+  private static List<Team> withSubTeams(List<Team> teams, Set<UUID> rootIds) {
+    Set<UUID> included = new HashSet<>(rootIds);
+    int previousSize;
+    do {
+      previousSize = included.size();
+      for (Team team : teams) {
+        if (team.getParentTeamId() != null && included.contains(team.getParentTeamId())) {
+          included.add(team.getId());
+        }
+      }
+    } while (included.size() > previousSize);
+    return teams.stream().filter(team -> included.contains(team.getId())).toList();
   }
 
   private boolean overlapsMonth(Absence absence, YearMonth month) {

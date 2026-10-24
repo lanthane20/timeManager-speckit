@@ -3,6 +3,7 @@ package fr.timemanager.application.payroll;
 import fr.timemanager.application.absence.AbsenceRepository;
 import fr.timemanager.application.absence.AbsenceTypeRepository;
 import fr.timemanager.application.absence.PublicHolidayRepository;
+import fr.timemanager.application.absence.WorkScheduleRepository;
 import fr.timemanager.application.audit.AuditRepository;
 import fr.timemanager.application.authorization.AuthorizationService;
 import fr.timemanager.application.dto.absence.AbsenceResponseDto;
@@ -37,6 +38,7 @@ public class CorrectAbsence {
   private final PublicHolidayRepository publicHolidayRepository;
   private final AuditRepository auditRepository;
   private final AuthorizationService authorizationService;
+  private final WorkScheduleRepository workScheduleRepository;
   private final WorkingDaysCalculator workingDaysCalculator = new WorkingDaysCalculator();
 
   public CorrectAbsence(
@@ -44,12 +46,14 @@ public class CorrectAbsence {
       AbsenceTypeRepository absenceTypeRepository,
       PublicHolidayRepository publicHolidayRepository,
       AuditRepository auditRepository,
-      AuthorizationService authorizationService) {
+      AuthorizationService authorizationService,
+      WorkScheduleRepository workScheduleRepository) {
     this.absenceRepository = absenceRepository;
     this.absenceTypeRepository = absenceTypeRepository;
     this.publicHolidayRepository = publicHolidayRepository;
     this.auditRepository = auditRepository;
     this.authorizationService = authorizationService;
+    this.workScheduleRepository = workScheduleRepository;
   }
 
   public AbsenceResponseDto execute(
@@ -94,7 +98,11 @@ public class CorrectAbsence {
     List<LocalDate> holidays =
         publicHolidayRepository.findBetween(request.startDate(), request.endDate());
     BigDecimal workingDays =
-        workingDaysCalculator.calculate(dateRange, halfDay, holidays, List.of());
+        workingDaysCalculator.calculateWithSchedules(
+            dateRange,
+            halfDay,
+            holidays,
+            workScheduleRepository.findByUserId(absence.getEmployeeId()));
 
     return new VersionAbsence(
         UUID.randomUUID(),

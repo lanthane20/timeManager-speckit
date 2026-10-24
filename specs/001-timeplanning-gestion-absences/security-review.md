@@ -25,7 +25,8 @@ listés en fin de document comme actions restantes.
 | `/api/v1/manager/absences/pending`, `/pending-n2` | GET | MANAGER | Filtré sur les équipes encadrées |
 | `/api/v1/manager/absences/{id}/validate`, `/validate-n2`, `/refuse`, `/cancel` | PUT/DELETE | MANAGER | `ManagerPerimeter` + interdiction d'auto-validation |
 | `/api/v1/manager/employees/{employeeId}/absences`, `/counters` | POST/GET | MANAGER | `ManagerPerimeter.assertManagesEmployee` |
-| `/api/v1/planning` | GET | MANAGER ou RH | Équipes du périmètre uniquement |
+| `/api/v1/planning`, `/planning/teams` | GET | MANAGER ou RH | Équipes managées et leurs sous-équipes ; toutes les équipes pour la RH |
+| `/api/v1/me` | GET | authentifié | Profil et rôles de l'utilisateur du jeton uniquement |
 | `/api/v1/rh/**` | toutes | RH | Rôle RH exigé dans le use case **et** au niveau HTTP |
 | `/api/v1/recurrences/**` | toutes | SALARIE | `recurrenceEnabled` vérifié dans le use case (EF-030) |
 | `/api/v1/admin/**` | toutes | ADMIN | Aucun endpoint n'expose de donnée d'absence (EF-035) |
