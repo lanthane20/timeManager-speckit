@@ -106,10 +106,9 @@ export class PayrollComponent implements OnInit {
     const { year, month } = this.closureForm.getRawValue();
     this.start();
     this.payrollService.closePeriod(year, month).subscribe({
-      next: closure => {
-        this.done(`Période ${closure.month}/${closure.year} clôturée.`);
-        this.loadRegularisations();
-      },
+      // Le rechargement réinitialise les messages : il porte donc la confirmation de clôture.
+      next: closure =>
+        this.loadRegularisations(false, `Période ${closure.month}/${closure.year} clôturée.`),
       error: (error: { status?: number }) =>
         this.fail(
           error.status === 409
@@ -120,13 +119,13 @@ export class PayrollComponent implements OnInit {
   }
 
   /** EF-026 : régularisations de la période saisie, ou toutes si aucune période. */
-  loadRegularisations(filtered = false): void {
+  loadRegularisations(filtered = false, successMessage: string | null = null): void {
     const { year, month } = this.closureForm.getRawValue();
     this.start();
     this.payrollService.getRegularisations(...(filtered ? [year, month] : [])).subscribe({
       next: entries => {
         this.regularisations.set(entries);
-        this.done(null);
+        this.done(successMessage);
       },
       error: () => this.fail("Les régularisations n'ont pas pu être chargées."),
     });

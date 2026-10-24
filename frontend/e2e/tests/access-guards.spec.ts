@@ -1,17 +1,15 @@
 import { expect, test } from '@playwright/test';
-import { USERS, signInAs } from '../fixtures/auth';
-
-const EMPLOYEE_TOKEN = process.env['E2E_TOKEN_SALARIE'] ?? '';
+import { E2E_SKIP_REASON, USERS, e2eDisabled, signInAs } from '../fixtures/auth';
 
 /**
  * T141e — Cloisonnement des rôles : un salarié n'accède ni à l'administration, ni à la file de
  * validation, ni aux écrans RH (Constitution Principe IV, EF-035).
  */
 test.describe('Guards d\'accès par rôle', () => {
-  test.skip(!EMPLOYEE_TOKEN, 'Jeton E2E absent — définir E2E_TOKEN_SALARIE');
+  test.skip(e2eDisabled, E2E_SKIP_REASON);
 
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, USERS['salarie'], EMPLOYEE_TOKEN);
+    await signInAs(page, USERS['salarie']);
   });
 
   for (const path of ['/admin', '/validation', '/payroll', '/planning']) {

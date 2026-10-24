@@ -83,6 +83,18 @@ cd frontend
 
 `environment.example.ts` sert de référence pour les variables attendues.
 
+Le build de production utilise `environment.prod.ts`, dont les marqueurs sont remplacés dans le
+build par les variables du déploiement (`GOOGLE_CLIENT_ID`, `APP_BASE_URL` de `.env.example`) :
+
+```bash
+cd frontend
+npm run build -- --configuration=production
+GOOGLE_CLIENT_ID=<client-id> APP_BASE_URL=https://timemanager.internal npm run inject-env
+```
+
+Le script échoue si une variable manque ou contient un caractère hors `[A-Za-z0-9_.:/-]`, et si le
+build ne contient aucun marqueur (déjà injecté, ou build sans `environment.prod.ts`).
+
 ---
 
 ## Démarrage en développement
@@ -104,8 +116,8 @@ npm install --legacy-peer-deps
 npm start
 ```
 
-> **`--legacy-peer-deps` est nécessaire** : PrimeNG 18 déclare des peers Angular 17/18 alors que le
-> projet utilise Angular 21. Le point est suivi dans
+> **`--legacy-peer-deps` est nécessaire** pour les paquets `@angular-eslint` 18 (outillage de
+> développement) ; PrimeNG est aligné sur Angular 21. Voir
 > [`security-review.md`](./security-review.md) (A06).
 
 L'application Angular démarre sur `http://localhost:4200` avec proxy vers `http://localhost:8080/api`.
@@ -157,9 +169,33 @@ npm run e2e:install   # une seule fois : télécharge les navigateurs Playwright
 npm run e2e           # Playwright (end-to-end)
 ```
 
-> Les scénarios end-to-end sont ignorés tant que les jetons de démonstration
-> (`E2E_TOKEN_SALARIE`, `E2E_TOKEN_MANAGER`, `E2E_TOKEN_RH`) ne sont pas fournis dans
-> l'environnement — voir `frontend/e2e/fixtures/auth.ts`.
+Les scénarios end-to-end s'exécutent contre l'application complète (MariaDB, backend, frontend)
+et se connectent réellement : un Keycloak de test remplace Google, avec trois comptes de
+démonstration (`frontend/e2e/keycloak/timeplanning-realm.json`) dont les rôles sont en base
+(`frontend/e2e/fixtures/seed.sql`). Sans la variable `E2E_KEYCLOAK_URL`, ils sont ignorés. La CI
+(job `e2e`) déroule les mêmes étapes :
+
+```bash
+# 1. Keycloak de test (http://localhost:8180, royaume « timeplanning »)
+docker compose -f docker/docker-compose.yml --profile e2e up -d keycloak
+
+# 2. Backend sur une base MariaDB dédiée et vide, émetteur des jetons = Keycloak
+SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8180/realms/timeplanning \
+NOTIFICATION_ENABLED=false MANAGEMENT_HEALTH_MAIL_ENABLED=false \
+java -jar api/target/api-1.0.0-SNAPSHOT.jar
+
+# 3. Comptes de démonstration (après le démarrage, qui applique les migrations)
+mariadb -utimemanager -p timemanager < frontend/e2e/fixtures/seed.sql
+
+# 4. Tests (hors CI, Playwright démarre lui-même `npm run start:e2e`)
+cd frontend && E2E_KEYCLOAK_URL=http://localhost:8180 npm run e2e
+```
+
+La configuration Angular `e2e` (`npm run start:e2e`) ne diffère de `development` que par
+l'émetteur OIDC (`src/environments/environment.e2e.ts`).
+
+> Les projets bureau et mobile s'exécutent sur la même base, chacun sur son propre mois : repartir
+> d'une base vide avant chaque exécution complète.
 
 ---
 

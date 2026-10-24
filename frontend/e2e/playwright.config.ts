@@ -5,8 +5,8 @@ const BASE_URL = process.env['E2E_BASE_URL'] ?? 'http://localhost:4200';
 /**
  * T141b — Configuration Playwright des tests end-to-end.
  *
- * Les scénarios s'appuient sur des utilisateurs de démonstration et une session simulée : la
- * connexion Google réelle n'est pas rejouée en E2E (voir `fixtures/auth.ts`).
+ * Les scénarios se connectent réellement avec les comptes de démonstration d'un Keycloak de test,
+ * qui remplace Google (voir `fixtures/auth.ts` et `keycloak/timeplanning-realm.json`).
  */
 export default defineConfig({
   testDir: './tests',
@@ -37,7 +37,7 @@ export default defineConfig({
   webServer: process.env['CI']
     ? undefined
     : {
-        command: 'npm start',
+        command: 'npm run start:e2e',
         url: BASE_URL,
         cwd: '..',
         reuseExistingServer: true,

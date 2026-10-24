@@ -95,9 +95,10 @@ listés en fin de document comme actions restantes.
 
 - La CI exécute `npm audit --audit-level=high` et `mvn dependency-check:check` (OWASP Dependency
   Check) à chaque exécution.
-- **Point d'attention connu** : PrimeNG 18 déclare des peers Angular 17/18 alors que le projet utilise
-  Angular 21 ; l'installation passe par `--legacy-peer-deps`. À réévaluer à la sortie d'une version
-  de PrimeNG alignée sur Angular 21.
+- PrimeNG est aligné sur Angular 21 (`primeng` 21.1, `@angular/cdk` 21.2). PrimeNG 18, compilé pour
+  Angular 18, faisait échouer le rendu de toute l'application (page blanche) ; les tests end-to-end
+  le détectent désormais. L'installation garde `--legacy-peer-deps` pour les paquets
+  `@angular-eslint` 18, outillage de développement uniquement.
 
 ### A07 — Identification and Authentication Failures
 
@@ -105,6 +106,12 @@ listés en fin de document comme actions restantes.
   inconnu de la base.
 - Les rôles applicatifs sont chargés depuis la base (`UserRolesLoader`) et non depuis des
   revendications libres du jeton — un jeton ne peut donc pas s'auto-attribuer un rôle.
+- Les rôles exposés au frontend proviennent de la base via `GET /api/v1/me` ; le frontend ne lit
+  plus de revendication `roles` dans le jeton (un jeton Google n'en porte pas).
+- **Tests end-to-end** : un Keycloak jetable remplace Google en CI, par simple changement de
+  `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` ; la validation des jetons est identique à
+  la production. Les mots de passe de `frontend/e2e/keycloak` ne valent que pour ce Keycloak de
+  test et ne sont pas des secrets.
 
 ### A08 — Software and Data Integrity Failures
 
@@ -149,7 +156,7 @@ service par fichier volumineux.
 | 1 | Imposer HTTPS et HSTS au niveau du reverse proxy | A02 |
 | 2 | Désactiver Swagger UI sur le profil `prod` | A05 |
 | 3 | Plafonner `spring.servlet.multipart.max-file-size` pour l'import Excel | A05 / DoS |
-| 4 | Réévaluer PrimeNG dès qu'une version compatible Angular 21 est publiée | A06 |
+| 4 | ~~Réévaluer PrimeNG dès qu'une version compatible Angular 21 est publiée~~ — fait (PrimeNG 21.1) | A06 |
 | 5 | Test d'intrusion externe sur l'environnement de recette | Transverse |
 
 Ces actions relèvent de la configuration d'exploitation ou d'une intervention externe : elles sont

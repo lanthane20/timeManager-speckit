@@ -119,6 +119,11 @@ public class AbsenceVersionEntity {
         createdAt);
   }
 
+  /** Reprend le compteur de verrouillage optimiste de la ligne déjà persistée. */
+  public void keepLockVersionOf(AbsenceVersionEntity persisted) {
+    this.version = persisted.version;
+  }
+
   public UUID getId() {
     return id;
   }

@@ -2,10 +2,11 @@ import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
-export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+export const roleGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const requiredRoles: string[] = route.data['roles'] ?? [];
+  await authService.whenSessionRestored();
 
   if (!authService.isAuthenticated()) {
     authService.login();

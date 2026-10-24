@@ -40,15 +40,16 @@ import { AuthService } from '../core/auth/auth.service';
   styles: [`
     .app-header {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      padding: 0 1.5rem;
-      height: 60px;
+      padding: 0.5rem 1.5rem;
+      min-height: 60px;
       background: #0d47a1;
       color: white;
-      gap: 2rem;
+      gap: 0.5rem 2rem;
     }
     .brand-name { font-size: 1.2rem; font-weight: bold; }
-    .header-nav { display: flex; gap: 1rem; flex: 1; }
+    .header-nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; flex: 1; }
     .header-nav a { color: white; text-decoration: none; padding: 0.5rem; border-radius: 4px; }
     .header-nav a.active {
       background: rgba(255,255,255,0.2);
@@ -74,6 +75,11 @@ import { AuthService } from '../core/auth/auth.service';
       top: 0.5rem;
     }
     .app-content { padding: 1.5rem; }
+    /* Mobile-first (WCAG 1.4.10) : l'en-tête passe à la ligne au lieu d'élargir la page. */
+    @media (max-width: 600px) {
+      .app-header { padding: 0.5rem 1rem; }
+      .app-content { padding: 1rem; }
+    }
     button { background: transparent; border: 1px solid white; color: white;
              padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; }
   `],

@@ -87,6 +87,11 @@ public class AbsenceEntity {
         domainVersions);
   }
 
+  /** Reprend le compteur de verrouillage optimiste de la ligne déjà persistée. */
+  public void keepLockVersionOf(AbsenceEntity persisted) {
+    this.version = persisted.version;
+  }
+
   public UUID getId() {
     return id;
   }

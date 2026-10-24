@@ -19,15 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AbsenceRepositoryAdapter implements AbsenceRepository {
 
   private final AbsenceJpaRepository absenceJpaRepository;
-  private final AbsenceVersionJpaRepository versionJpaRepository;
   private final AbsenceTypeRepository absenceTypeRepository;
 
   public AbsenceRepositoryAdapter(
-      AbsenceJpaRepository absenceJpaRepository,
-      AbsenceVersionJpaRepository versionJpaRepository,
-      AbsenceTypeRepository absenceTypeRepository) {
+      AbsenceJpaRepository absenceJpaRepository, AbsenceTypeRepository absenceTypeRepository) {
     this.absenceJpaRepository = absenceJpaRepository;
-    this.versionJpaRepository = versionJpaRepository;
     this.absenceTypeRepository = absenceTypeRepository;
   }
 
@@ -35,22 +31,28 @@ public class AbsenceRepositoryAdapter implements AbsenceRepository {
   @Transactional
   public Absence save(Absence absence) {
     var entity = AbsenceEntity.fromDomain(absence);
+    var persisted = absenceJpaRepository.findById(absence.getId());
+    // Le domaine ne porte pas les compteurs @Version : on reprend ceux de la base pour que la
+    // fusion d'une absence rechargée ne soit pas prise pour une modification concurrente.
+    persisted.ifPresent(entity::keepLockVersionOf);
+    absence.getVersions().forEach(v -> entity.getVersions().add(toEntity(v, entity, persisted)));
     // absences.current_version_id référence absence_versions, qui référence absences :
     // la version courante n'est renseignée qu'après l'enregistrement des versions.
     entity.setCurrentVersionId(null);
     var savedEntity = absenceJpaRepository.save(entity);
-    absence.getVersions().forEach(v -> saveVersion(savedEntity, v));
     savedEntity.setCurrentVersionId(absence.getCurrentVersionId());
     return savedEntity.toDomain();
   }
 
-  private void saveVersion(AbsenceEntity absenceEntity, VersionAbsence version) {
-    var savedVersion =
-        versionJpaRepository.save(AbsenceVersionEntity.fromDomain(version, absenceEntity));
-    // Garde la collection de l'entité gérée cohérente pour les lectures dans la même transaction
-    if (!absenceEntity.getVersions().contains(savedVersion)) {
-      absenceEntity.getVersions().add(savedVersion);
-    }
+  private static AbsenceVersionEntity toEntity(
+      VersionAbsence version, AbsenceEntity absenceEntity, Optional<AbsenceEntity> persisted) {
+    var entity = AbsenceVersionEntity.fromDomain(version, absenceEntity);
+    persisted.stream()
+        .flatMap(p -> p.getVersions().stream())
+        .filter(v -> v.getId().equals(version.getId()))
+        .findFirst()
+        .ifPresent(entity::keepLockVersionOf);
+    return entity;
   }
 
   @Override

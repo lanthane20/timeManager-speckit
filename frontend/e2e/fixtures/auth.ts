@@ -1,64 +1,47 @@
-import { Page } from '@playwright/test';
-
-export type E2ERole = 'SALARIE' | 'MANAGER' | 'RH' | 'ADMIN';
+import { Page, TestInfo, expect } from '@playwright/test';
 
 export interface E2EUser {
-  sub: string;
+  username: string;
+  password: string;
   name: string;
-  email: string;
-  roles: E2ERole[];
 }
 
-/** Comptes de démonstration attendus dans le jeu de données E2E. */
+/**
+ * Comptes de démonstration du Keycloak de test (`keycloak/timeplanning-realm.json`). Leurs rôles
+ * applicatifs sont en base (`fixtures/seed.sql`), comme pour un compte Google en production.
+ * Ces mots de passe n'existent que dans ce Keycloak jetable : ce ne sont pas des secrets.
+ */
 export const USERS: Record<string, E2EUser> = {
-  salarie: {
-    sub: 'e2e-salarie',
-    name: 'Léa Martin',
-    email: 'lea.martin@timemanager.fr',
-    roles: ['SALARIE'],
-  },
-  manager: {
-    sub: 'e2e-manager',
-    name: 'Manon Dubois',
-    email: 'manon.dubois@timemanager.fr',
-    roles: ['SALARIE', 'MANAGER'],
-  },
-  rh: {
-    sub: 'e2e-rh',
-    name: 'Rachel Hubert',
-    email: 'rachel.hubert@timemanager.fr',
-    roles: ['SALARIE', 'RH'],
-  },
+  salarie: { username: 'lea.martin', password: 'demo-salarie', name: 'Léa Martin' },
+  manager: { username: 'manon.dubois', password: 'demo-manager', name: 'Manon Dubois' },
+  rh: { username: 'rachel.hubert', password: 'demo-rh', name: 'Rachel Hubert' },
 };
 
-/**
- * Installe une session OIDC simulée dans le navigateur.
- *
- * <p>La connexion Google réelle n'est pas rejouée en E2E : elle dépend d'un fournisseur externe et
- * d'un second facteur. On dépose directement le jeton attendu par `oidc-client-ts` dans le stockage
- * de session, ce qui reproduit fidèlement l'état de l'application après une connexion réussie.
- */
-export async function signInAs(page: Page, user: E2EUser, accessToken: string): Promise<void> {
-  const storageKey = `oidc.user:https://accounts.google.com:${process.env['E2E_CLIENT_ID'] ?? 'e2e-client'}`;
-  const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+const KEYCLOAK_URL = process.env['E2E_KEYCLOAK_URL'] ?? '';
 
-  await page.addInitScript(
-    ([key, value]) => {
-      window.sessionStorage.setItem(key as string, value as string);
-    },
-    [
-      storageKey,
-      JSON.stringify({
-        access_token: accessToken,
-        token_type: 'Bearer',
-        expires_at: expiresAt,
-        profile: {
-          sub: user.sub,
-          name: user.name,
-          email: user.email,
-          roles: user.roles,
-        },
-      }),
-    ]
-  );
+export const E2E_SKIP_REASON =
+  'Keycloak de test non configuré — définir E2E_KEYCLOAK_URL (voir quickstart.md)';
+export const e2eDisabled = !KEYCLOAK_URL;
+
+/**
+ * Connexion réelle : l'application redirige vers Keycloak, l'utilisateur saisit ses identifiants,
+ * puis revient par `/callback` (code d'autorisation + PKCE), comme avec Google en production.
+ */
+export async function signInAs(page: Page, user: E2EUser): Promise<void> {
+  await page.goto('/');
+  await page.waitForURL(url => url.href.startsWith(KEYCLOAK_URL));
+  await page.locator('#username').fill(user.username);
+  await page.locator('#password').fill(user.password);
+  await page.locator('#kc-login').click();
+
+  await page.waitForURL('**/my-absences');
+  await expect(page.getByText(user.name)).toBeVisible();
+}
+
+/**
+ * Les projets (bureau, mobile) s'exécutent l'un après l'autre sur la même base : chacun travaille
+ * sur son propre mois pour ne pas heurter les absences ou clôtures créées par l'autre.
+ */
+export function monthFor(testInfo: TestInfo): number {
+  return 6 + testInfo.config.projects.findIndex(p => p.name === testInfo.project.name);
 }
