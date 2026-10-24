@@ -88,6 +88,11 @@ jobs:
         working-directory: frontend
         run: npm run build -- --configuration=production
 
+      # Le build doit embarquer environment.prod.ts, dont `npm run inject-env` remplace les marqueurs.
+      - name: Vérifier l'environnement de production
+        working-directory: frontend
+        run: grep -lF '${GOOGLE_CLIENT_ID}' dist/frontend/browser/*.js
+
   e2e:
     name: End-to-end — Playwright / Keycloak + backend + MariaDB
     runs-on: ubuntu-latest

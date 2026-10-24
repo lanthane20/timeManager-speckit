@@ -83,6 +83,18 @@ cd frontend
 
 `environment.example.ts` sert de référence pour les variables attendues.
 
+Le build de production utilise `environment.prod.ts`, dont les marqueurs sont remplacés dans le
+build par les variables du déploiement (`GOOGLE_CLIENT_ID`, `APP_BASE_URL` de `.env.example`) :
+
+```bash
+cd frontend
+npm run build -- --configuration=production
+GOOGLE_CLIENT_ID=<client-id> APP_BASE_URL=https://timemanager.internal npm run inject-env
+```
+
+Le script échoue si une variable manque ou contient un caractère hors `[A-Za-z0-9_.:/-]`, et si le
+build ne contient aucun marqueur (déjà injecté, ou build sans `environment.prod.ts`).
+
 ---
 
 ## Démarrage en développement
@@ -104,8 +116,8 @@ npm install --legacy-peer-deps
 npm start
 ```
 
-> **`--legacy-peer-deps` est nécessaire** : PrimeNG 18 déclare des peers Angular 17/18 alors que le
-> projet utilise Angular 21. Le point est suivi dans
+> **`--legacy-peer-deps` est nécessaire** pour les paquets `@angular-eslint` 18 (outillage de
+> développement) ; PrimeNG est aligné sur Angular 21. Voir
 > [`security-review.md`](./security-review.md) (A06).
 
 L'application Angular démarre sur `http://localhost:4200` avec proxy vers `http://localhost:8080/api`.
