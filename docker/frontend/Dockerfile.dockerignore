@@ -1,0 +1,10 @@
+# Contexte de l'image frontend : seuls les sources Angular et la configuration Nginx sont utiles.
+*
+!frontend/
+!docker/frontend/
+frontend/node_modules
+frontend/dist
+frontend/.angular
+frontend/coverage
+frontend/playwright-report
+frontend/e2e/.results

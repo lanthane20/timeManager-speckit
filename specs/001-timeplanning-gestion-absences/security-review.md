@@ -154,7 +154,7 @@ service par fichier volumineux.
 
 | # | Action | Risque couvert |
 |---|--------|----------------|
-| 1 | Imposer HTTPS et HSTS au niveau du reverse proxy | A02 |
+| 1 | ~~Imposer HTTPS et HSTS au niveau du reverse proxy~~ — fait : Traefik (`docker/production`), redirection HTTP → HTTPS, HSTS 1 an, TLS 1.2 minimum | A02 |
 | 2 | Désactiver Swagger UI sur le profil `prod` | A05 |
 | 3 | Plafonner `spring.servlet.multipart.max-file-size` pour l'import Excel | A05 / DoS |
 | 4 | ~~Réévaluer PrimeNG dès qu'une version compatible Angular 21 est publiée~~ — fait (PrimeNG 21.1) | A06 |

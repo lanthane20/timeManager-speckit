@@ -1,0 +1,10 @@
+# En-têtes de sécurité appliqués à toutes les réponses (revue de sécurité, actions 1 et A05).
+http:
+  middlewares:
+    security-headers:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        contentTypeNosniff: true
+        frameDeny: true
+        referrerPolicy: strict-origin-when-cross-origin

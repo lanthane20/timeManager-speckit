@@ -1,0 +1,3 @@
+# Contexte de l'image backend : seul le jar Spring Boot construit par Maven est copié.
+*
+!api/target/*.jar

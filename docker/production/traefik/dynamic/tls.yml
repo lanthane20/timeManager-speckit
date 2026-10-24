@@ -1,0 +1,11 @@
+# Certificat du serveur (autorité interne de l'entreprise) : certs/timeplanning.crt et .key.
+# Inutile avec Let's Encrypt (voir docker-compose.yml).
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/timeplanning.crt
+        keyFile: /certs/timeplanning.key
+  options:
+    default:
+      minVersion: VersionTLS12

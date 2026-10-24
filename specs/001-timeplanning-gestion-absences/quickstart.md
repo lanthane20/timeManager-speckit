@@ -95,6 +95,10 @@ GOOGLE_CLIENT_ID=<client-id> APP_BASE_URL=https://timemanager.internal npm run i
 Le script échoue si une variable manque ou contient un caractère hors `[A-Za-z0-9_.:/-]`, et si le
 build ne contient aucun marqueur (déjà injecté, ou build sans `environment.prod.ts`).
 
+Le déploiement sur serveur privé (images Docker, Traefik, runner auto-hébergé) est décrit dans
+[`docker/production/README.md`](../../docker/production/README.md) ; l'image frontend réalise
+cette injection à son démarrage.
+
 ---
 
 ## Démarrage en développement
